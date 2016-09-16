@@ -1,2 +1,2 @@
-# au-soft-design
+# au-bicycles
 AU software design course assignments
