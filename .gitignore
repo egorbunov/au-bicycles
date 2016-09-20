@@ -7,3 +7,5 @@ install_manifest.txt
 CTestTestfile.cmake
 .gradle/
 .idea/
+gradlew.bat
+gradle/wrapper/gradle-wrapper.properties
