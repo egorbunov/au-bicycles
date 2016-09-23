@@ -18,3 +18,7 @@ package ru.spbau.mit.aush.execute
             .setUrls(ClasspathHelper.forPackage("ru.spbau.mit")))
     ```
  */
+
+class AushExecutor(val context: AushContext) {
+
+}

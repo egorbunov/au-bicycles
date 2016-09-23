@@ -5,5 +5,12 @@ package ru.spbau.mit.aush.execute.cmd
  * Date: 9/23/16
  * Email: egor-mailbox@ya.com
  */
-private class CatCmd {
+private class CatCmd: Cmd {
+    override fun name(): String {
+        return "cat"
+    }
+
+    override fun exec(args: String, inStream: String, outStream: String): Int {
+        return 0
+    }
 }

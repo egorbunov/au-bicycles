@@ -16,23 +16,17 @@ abstract class Statement {}
 /**
  * Simple command line utility call statement like:
  *     `echo -n "Hello" "World"`
- *
- * Command name (`echo`) is stored in `cmdName`
- *
- * Arguments string (`-n "Hello" "World"`) is stored
- * in `args` property
  */
 class CmdStatement(val cmdName: String, val args: String) : Statement() {}
 
 /**
- * Statement with more than one command call connected with
- * pipes (io redirection) parsed to `PipedStatement`:
+ * Commands connected with io redirection form piped statement:
  *     `echo "Hello" | cat`
  */
 class PipedStatement(val cmds: Array<CmdStatement>) : Statement() {}
 
 /**
  * That class represents assignment:
- *     `VARNAME=VALUE`
+ *     `VAR_NAME=VALUE`
  */
 class AssignStatement(val varName: String, val value: String) : Statement() {}

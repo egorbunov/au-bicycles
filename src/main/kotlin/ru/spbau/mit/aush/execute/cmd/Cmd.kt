@@ -20,10 +20,11 @@ interface Cmd {
     /**
      * Executes command, passing to it given args and
      * with input and output stream specified
-     * 
+     *
      * @param args command line arguments
      * @param inStream input stream
      * @param outStream output stream
+     * @return exit code
      */
-    fun exec(args: String, inStream: String, outStream: String)
+    fun exec(args: String, inStream: String, outStream: String): Int
 }
