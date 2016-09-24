@@ -10,6 +10,7 @@ import java.util.*
 
 class AushContext {
     private val vars = HashMap<String, String>()
+    private var lastExitCode: Int = 0
 
     fun addVar(name: String, value: String) {
         vars.put(name, value)
@@ -17,5 +18,13 @@ class AushContext {
 
     fun getVars(): List<Pair<String, String>> {
         return vars.toList()
+    }
+
+    fun setExitCode(code: Int) {
+        lastExitCode = code
+    }
+
+    fun getExitCode(): Int {
+        return lastExitCode
     }
 }
