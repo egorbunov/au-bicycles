@@ -42,18 +42,17 @@ class AushInterpreter(val context: AushContext,
                 .map { it.newInstance() }.map { it.name() to it }.toMap()
     }
 
-    private fun replaceVars(str: String) {
-        context.getVars().forEach {
-            str.replace("$${it.first}", it.second)
-            str.replace("$\\{${it.first}\\}", it.second)
-        }
-    }
-
     /**
      * Executes given command as parsed statement
      */
     fun execute(statement: Statement) {
         // replacing variables
+        val replaceVars = { str: String ->
+            context.getVars().forEach {
+                str.replace("$${it.first}", it.second)
+                str.replace("$\\{${it.first}\\}", it.second)
+            }
+        }
         statement.accept(object : StatementVisitor {
             override fun visit(assign: Statement.Assign) {
                 replaceVars(assign.varName)
@@ -82,13 +81,12 @@ class AushInterpreter(val context: AushContext,
                               output: OutputStream = baseOut) {
         println("executing ${statement.cmdName}")
 
-        if (executors[statement.cmdName] != null) {
+        val exitCode = if (executors[statement.cmdName] != null) {
             executors[statement.cmdName]!!.exec(statement.args, input, output)
-            return
+        } else {
+            executeExternalCmd(statement, input, output)
         }
-
-        // executing command as external one
-        println("EXTERNAL =(")
+        context.setExitCode(exitCode)
     }
 
     private fun execPipedCmd(statement: Statement.Pipe) {
@@ -110,4 +108,16 @@ class AushInterpreter(val context: AushContext,
         context.addVar(statement.varName, statement.value)
         context.setExitCode(0)
     }
+
+    private fun executeExternalCmd(statement: Statement.Cmd,
+                                   input: InputStream,
+                                   output: OutputStream): Int {
+        return 0
+    }
 }
+
+// TODO: add test for interpreter with mocked input and output streams
+// TODO: implement Commands executors
+// TODO: add tests for every executor
+// TODO: implement external command executor
+
