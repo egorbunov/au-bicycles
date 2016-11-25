@@ -24,13 +24,13 @@ class ParseTest(val str: String,
         @JvmStatic fun testData(): Collection<Any> {
             return Arrays.asList(
                     arrayOf("echo HELLO | cat",
-                            PipedStatement(arrayOf(
-                                    CmdStatement("echo", "HELLO"),
-                                    CmdStatement("cat", "")))),
+                            Statement.Pipe(arrayOf(
+                                    Statement.Cmd("echo", "HELLO"),
+                                    Statement.Cmd("cat", "")))),
                     arrayOf("VAR_NAME='value with spaces'",
-                            AssignStatement("VAR_NAME", "value with spaces")),
+                            Statement.Assign("VAR_NAME", "value with spaces")),
                     arrayOf("cmd a \"b\" 'c' '|' \"|\" '\"\\''",
-                            CmdStatement("cmd", "a \"b\" 'c' '|' \"|\" '\"\\''"))
+                            Statement.Cmd("cmd", "a \"b\" 'c' '|' \"|\" '\"\\''"))
             )
         }
     }

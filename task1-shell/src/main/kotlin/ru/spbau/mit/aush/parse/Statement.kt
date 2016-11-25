@@ -1,12 +1,7 @@
 package ru.spbau.mit.aush.parse
 
+import ru.spbau.mit.aush.parse.visitor.StatementVisitor
 import java.util.*
-
-/**
- * Created by: Egor Gorbunov
- * Date: 9/23/16
- * Email: egor-mailbox@ya.com
- */
 
 /**
  * Base class for every possible shell statement,
@@ -14,11 +9,17 @@ import java.util.*
  * and "executed" by executor
  */
 sealed class Statement {
+    abstract fun accept(visitor: StatementVisitor)
+
     /**
      * Simple command line utility call statement like:
      *     `echo -n "Hello" "World"`
      */
     class Cmd(val cmdName: String, val args: String) : Statement() {
+        override fun accept(visitor: StatementVisitor) {
+            visitor.visit(this)
+        }
+
         override fun toString(): String {
             return "CmdExecutor($cmdName${if (args.isEmpty()) "" else ", $args"})"
         }
@@ -39,6 +40,10 @@ sealed class Statement {
      *     `echo "Hello" | cat`
      */
     class Pipe(val commands: Array<Cmd>) : Statement() {
+        override fun accept(visitor: StatementVisitor) {
+            visitor.visit(this)
+        }
+
         override fun toString(): String {
             return "Pipes(${commands.foldRight("", { c, s -> if (s.isEmpty()) "$c" else "$c, $s" })})"
         }
@@ -58,6 +63,10 @@ sealed class Statement {
      *     `VAR_NAME=VALUE`
      */
     class Assign(val varName: String, val value: String) : Statement() {
+        override fun accept(visitor: StatementVisitor) {
+            visitor.visit(this)
+        }
+
         override fun toString(): String {
             return "Assign($varName, [$value])"
         }

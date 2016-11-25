@@ -2,12 +2,6 @@ package ru.spbau.mit.aush.execute
 
 import java.util.*
 
-/**
- * Created by: Egor Gorbunov
- * Date: 9/23/16
- * Email: egor-mailbox@ya.com
- */
-
 class AushContext {
     private val vars = HashMap<String, String>()
     private var lastExitCode: Int = 0
@@ -18,6 +12,10 @@ class AushContext {
 
     fun getVars(): List<Pair<String, String>> {
         return vars.toList()
+    }
+
+    fun getVar(name: String): String? {
+        return vars[name]
     }
 
     fun setExitCode(code: Int) {
