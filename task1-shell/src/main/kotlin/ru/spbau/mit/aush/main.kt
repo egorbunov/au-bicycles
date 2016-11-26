@@ -1,5 +1,7 @@
 package ru.spbau.mit.aush
 
+import ru.spbau.mit.aush.execute.AushContext
+import ru.spbau.mit.aush.execute.AushInterpreter
 import ru.spbau.mit.aush.parse.AushParser
 
 /**
@@ -10,6 +12,21 @@ import ru.spbau.mit.aush.parse.AushParser
 
 
 fun main(args: Array<String>) {
-    val parser = AushParser()
-    println(parser.parse("echo \"hello'\" | cat"))
+    val pareser = AushParser()
+    val context = AushContext()
+    val interpreter = AushInterpreter(context, System.`in`, System.out)
+    val replReader = System.`in`.bufferedReader()
+    while (true) {
+        print("aush >> ")
+        val line = replReader.readLine() ?: break
+        if (line.isBlank()) {
+            continue
+        }
+        val statement = pareser.parse(line)
+        if (statement === null) {
+            println("Error: bad syntax...")
+            continue
+        }
+        interpreter.execute(statement)
+    }
 }

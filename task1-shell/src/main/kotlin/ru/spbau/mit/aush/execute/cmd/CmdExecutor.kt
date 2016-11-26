@@ -3,11 +3,6 @@ package ru.spbau.mit.aush.execute.cmd
 import java.io.InputStream
 import java.io.OutputStream
 
-/**
- * Created by: Egor Gorbunov
- * Date: 9/23/16
- * Email: egor-mailbox@ya.com
- */
 
 
 /**
@@ -18,8 +13,7 @@ import java.io.OutputStream
  */
 abstract class CmdExecutor {
     /**
-     * @return name of the command, which is processed
-     *         by that executor as used by AUSH user
+     * @return name of the command, which is used by AUSH user to run this command
      */
     abstract fun name(): String
 

@@ -4,16 +4,18 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * Created by: Egor Gorbunov
- * Date: 9/23/16
- * Email: egor-mailbox@ya.com
+ * user.dir is used as working directory
  */
-private class PWDExecutor : CmdExecutor() {
+class PWDExecutor : CmdExecutor() {
     override fun name(): String {
         return "pwd"
     }
 
     override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
+        val writer = outStream.bufferedWriter()
+        writer.write(System.getProperty("user.dir"))
+        writer.newLine()
+        writer.flush()
         return 0
     }
 }

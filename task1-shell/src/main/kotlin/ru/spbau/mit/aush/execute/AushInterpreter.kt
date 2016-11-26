@@ -7,10 +7,12 @@ import org.reflections.util.ConfigurationBuilder
 import ru.spbau.mit.aush.execute.cmd.CmdExecutor
 import ru.spbau.mit.aush.parse.Statement
 import ru.spbau.mit.aush.parse.visitor.StatementVisitor
+import ru.spbau.mit.aush.parse.visitor.VarReplacingVisitor
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.logging.Logger
 
 /**
  * Main interpreter class
@@ -24,7 +26,7 @@ import java.io.OutputStream
 class AushInterpreter(val context: AushContext,
                       val baseIn: InputStream,
                       val baseOut: OutputStream) {
-
+    val logger = Logger.getLogger("AushInterpreter")
     val executors: Map<String, CmdExecutor>
 
     init {
@@ -47,39 +49,20 @@ class AushInterpreter(val context: AushContext,
      */
     fun execute(statement: Statement) {
         // replacing variables
-        val replaceVars = { str: String ->
-            context.getVars().forEach {
-                str.replace("$${it.first}", it.second)
-                str.replace("$\\{${it.first}\\}", it.second)
-            }
-        }
-        statement.accept(object : StatementVisitor {
-            override fun visit(assign: Statement.Assign) {
-                replaceVars(assign.varName)
-                replaceVars(assign.value)
-            }
+        val replacer = VarReplacingVisitor(context)
+        val statementWithVars = replacer.replace(statement)
 
-            override fun visit(cmd: Statement.Cmd) {
-                replaceVars(cmd.cmdName)
-                replaceVars(cmd.args)
-            }
-
-            override fun visit(pipe: Statement.Pipe) {
-                pipe.commands.forEach { this.visit(it) }
-            }
-        })
-
-        when (statement) {
-            is Statement.Cmd -> execSimpleCmd(statement)
-            is Statement.Pipe -> execPipedCmd(statement)
-            is Statement.Assign -> execAssignCmd(statement)
+        when (statementWithVars) {
+            is Statement.Cmd -> execSimpleCmd(statementWithVars)
+            is Statement.Pipe -> execPipedCmd(statementWithVars)
+            is Statement.Assign -> execAssignCmd(statementWithVars)
         }
     }
 
     private fun execSimpleCmd(statement: Statement.Cmd,
                               input: InputStream = baseIn,
                               output: OutputStream = baseOut) {
-        println("executing ${statement.cmdName}")
+        logger.info("executing ${statement.cmdName}")
 
         val exitCode = if (executors[statement.cmdName] != null) {
             executors[statement.cmdName]!!.exec(statement.args, input, output)
@@ -105,6 +88,7 @@ class AushInterpreter(val context: AushContext,
     }
 
     private fun execAssignCmd(statement: Statement.Assign) {
+        logger.info("Adding var: ${statement.varName}, value = ${statement.value}")
         context.addVar(statement.varName, statement.value)
         context.setExitCode(0)
     }
@@ -116,8 +100,8 @@ class AushInterpreter(val context: AushContext,
     }
 }
 
-// TODO: add test for interpreter with mocked input and output streams
 // TODO: implement Commands executors
+// TODO: add test for interpreter with mocked input and output streams
 // TODO: add tests for every executor
 // TODO: implement external command executor
 
