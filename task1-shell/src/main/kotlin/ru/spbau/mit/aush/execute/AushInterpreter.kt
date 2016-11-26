@@ -1,18 +1,18 @@
 package ru.spbau.mit.aush.execute
 
+import org.apache.commons.io.IOUtils
 import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
 import ru.spbau.mit.aush.execute.cmd.CmdExecutor
+import ru.spbau.mit.aush.execute.error.CmdExecutionError
+import ru.spbau.mit.aush.log.Logging
+import ru.spbau.mit.aush.parse.ArgsSplitter
 import ru.spbau.mit.aush.parse.Statement
-import ru.spbau.mit.aush.parse.visitor.StatementVisitor
 import ru.spbau.mit.aush.parse.visitor.VarReplacingVisitor
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.util.logging.Logger
+import java.io.*
+import java.util.*
 
 /**
  * Main interpreter class
@@ -26,7 +26,7 @@ import java.util.logging.Logger
 class AushInterpreter(val context: AushContext,
                       val baseIn: InputStream,
                       val baseOut: OutputStream) {
-    val logger = Logger.getLogger("AushInterpreter")
+    val logger = Logging.getLogger("AushInterpreter")
     val executors: Map<String, CmdExecutor>
 
     init {
@@ -96,12 +96,38 @@ class AushInterpreter(val context: AushContext,
     private fun executeExternalCmd(statement: Statement.Cmd,
                                    input: InputStream,
                                    output: OutputStream): Int {
+        logger.info("Executing external command: ${statement.cmdName}")
+
+        // prepare arguments
+        val argsSplitter = ArgsSplitter()
+        val args = try {
+            argsSplitter.parse(statement.args)
+        } catch (e: IllegalArgumentException) {
+            listOf("")
+        }
+        val command = ArrayList<String>()
+        command.add(statement.cmdName)
+        if (args.isNotEmpty()) {
+            command.addAll(args)
+        }
+
+        // run process
+        val pb = ProcessBuilder(command)
+        pb.directory(File(System.getProperty("user.dir")))
+//        pb.inheritIO()
+        val process = try {
+            pb.start()
+        } catch (e: IOException) {
+            throw CmdExecutionError("Can't execute command: ${statement.cmdName}")
+        }
+        while (process.isAlive) {
+            process.waitFor()
+        }
+        IOUtils.copy(process.inputStream, output)
+        val ret = process.exitValue()
+        context.setExitCode(ret)
         return 0
     }
 }
 
-// TODO: implement Commands executors
-// TODO: add test for interpreter with mocked input and output streams
-// TODO: add tests for every executor
-// TODO: implement external command executor
 

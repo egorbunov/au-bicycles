@@ -6,10 +6,7 @@ import ru.spbau.mit.aush.util.unquote
  *
  */
 class AushParser() {
-    private val singleQuotedRegex = "'(?:[^'\\\\]|\\\\.)*'"
-    private val doubleQuotedRegex = "\"(?:[^\"\\\\]|\\\\.)*\""
-    private val argRegex = "(?:$singleQuotedRegex|$doubleQuotedRegex|[^|\"'\\s]+)"
-    private val cmdRegex = "(?:\\s*$argRegex\\s*)+"
+    private val cmdRegex = "(?:\\s*${ParseRegexes.argRegex}\\s*)+"
 
     fun parse(str: String): Statement? {
         return parseAssign(str) ?: parsePipedCmd(str) ?: parseSimpleCmd(str)
@@ -18,8 +15,8 @@ class AushParser() {
     private fun parseAssign(str: String): Statement.Assign? {
         val pattern = Regex("([\\w_]+)=" +            // {variable name}=
                             "((?:[^\\s'\"]*)" +       // char sequence without spaces
-                            "|$singleQuotedRegex" +   // OR double quoted string with escaped chars
-                            "|$doubleQuotedRegex)")    // OR single quoted string with escaped chars
+                            "|${ParseRegexes.singleQuotedRegex}" +   // OR double quoted string with escaped chars
+                            "|${ParseRegexes.doubleQuotedRegex})")    // OR single quoted string with escaped chars
         val m = pattern.matchEntire(str) ?: return null
         return Statement.Assign(m.groupValues[1], unquote(m.groupValues[2]))
     }
@@ -40,7 +37,7 @@ class AushParser() {
     }
 
     private fun parseSimpleCmd(str: String): Statement.Cmd? {
-        val p = Regex("\\s*($argRegex)((?:\\s*$argRegex\\s*)*)")
+        val p = Regex("\\s*(${ParseRegexes.argRegex})((?:\\s*${ParseRegexes.argRegex}\\s*)*)")
         val m = p.matchEntire(str) ?: return null
         return Statement.Cmd(m.groupValues[1].trim(), m.groupValues[2].trim())
     }

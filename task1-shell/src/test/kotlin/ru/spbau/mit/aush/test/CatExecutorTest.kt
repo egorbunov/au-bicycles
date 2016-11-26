@@ -16,7 +16,7 @@ class CatExecutorTest {
         val catExecutor = CatExecutor()
         val linesOutStream = PipedOutputStream()
         val catInput = PipedInputStream(linesOutStream)
-        val linesIn = listOf("line1", "line2", "line3", "", "")
+        val linesIn = listOf("line1", "line2", "line3", "EOF")
         val writer = BufferedWriter(OutputStreamWriter(linesOutStream))
         linesIn.forEach { writer.write(it); writer.newLine() }
         writer.flush()
@@ -34,7 +34,7 @@ class CatExecutorTest {
         val catOutReader = BufferedReader(InputStreamReader(catOutputIn))
         val linesOut = catOutReader.readLines()
 
-        Assert.assertArrayEquals(linesIn.toTypedArray(), linesOut.toTypedArray())
+        Assert.assertArrayEquals(linesIn.toTypedArray().sliceArray(0..linesIn.size-2), linesOut.toTypedArray())
     }
 
     @Test

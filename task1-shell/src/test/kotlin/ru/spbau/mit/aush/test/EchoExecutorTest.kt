@@ -18,7 +18,9 @@ class EchoExecutorTest {
         val outIn = PipedInputStream(out)
 
         val args = listOf("a", "b", "\"a and b\"", "'a and b'", "\\n", "'\\''", "\"\\\"\"")
+        val expectedStr = "a b a and b a and b n ' \""
         val argsStr = args.joinToString(" ")
+
 
         echoExecutor.exec(argsStr, System.`in`, out)
         out.close()
@@ -29,9 +31,6 @@ class EchoExecutorTest {
         Assert.assertTrue(lines.size == 1)
         val line = lines[0]
 
-        println(line)
-        println(argsStr)
-
-        Assert.assertEquals(argsStr, line)
+        Assert.assertEquals(expectedStr, line)
     }
 }

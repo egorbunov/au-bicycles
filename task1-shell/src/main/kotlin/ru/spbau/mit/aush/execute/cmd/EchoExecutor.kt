@@ -1,7 +1,7 @@
 package ru.spbau.mit.aush.execute.cmd
 
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
-import ru.spbau.mit.aush.parse.SimpleArgsParser
+import ru.spbau.mit.aush.parse.ArgsSplitter
 import java.io.BufferedWriter
 import java.io.InputStream
 import java.io.OutputStream
@@ -9,7 +9,7 @@ import java.io.OutputStreamWriter
 
 
 class EchoExecutor : CmdExecutor() {
-    val argSplitter = SimpleArgsParser()
+    val argSplitter = ArgsSplitter()
     val separator = " "
 
     override fun name(): String {

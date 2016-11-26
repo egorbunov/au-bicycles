@@ -2,6 +2,8 @@ package ru.spbau.mit.aush
 
 import ru.spbau.mit.aush.execute.AushContext
 import ru.spbau.mit.aush.execute.AushInterpreter
+import ru.spbau.mit.aush.execute.error.BadCmdArgsError
+import ru.spbau.mit.aush.execute.error.CmdExecutionError
 import ru.spbau.mit.aush.parse.AushParser
 
 /**
@@ -27,6 +29,12 @@ fun main(args: Array<String>) {
             println("Error: bad syntax...")
             continue
         }
-        interpreter.execute(statement)
+        try {
+            interpreter.execute(statement)
+        } catch (e: CmdExecutionError) {
+            println("Error: ${e.message}")
+        } catch (e: BadCmdArgsError) {
+            println("Error: ${e.message}")
+        }
     }
 }

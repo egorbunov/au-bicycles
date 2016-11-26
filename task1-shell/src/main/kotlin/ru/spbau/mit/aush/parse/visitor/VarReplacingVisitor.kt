@@ -34,8 +34,10 @@ class VarReplacingVisitor(val context: AushContext) : StatementVisitor {
     }
 
     private fun replaceVars(str: String): String {
-        val replaceNoBrace = context.getVars().fold(str, {s, p -> s.replace("$${p.first}", p.second)})
-        val replaceInBrace = context.getVars().fold(replaceNoBrace, {s, p -> s.replace("\${${p.first}}", p.second)})
+        val replaceNoBrace = context.getVars().fold(str,
+                {s, p -> s.replace("$${p.first}", p.second)})
+        val replaceInBrace = context.getVars().fold(replaceNoBrace,
+                {s, p -> s.replace("\${${p.first}}", p.second)})
         return replaceInBrace
     }
 }

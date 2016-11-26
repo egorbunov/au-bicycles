@@ -3,16 +3,17 @@ package ru.spbau.mit.aush.execute.cmd
 import jdk.internal.util.xml.impl.Input
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
-import ru.spbau.mit.aush.parse.SimpleArgsParser
+import ru.spbau.mit.aush.parse.ArgsSplitter
 import java.io.*
 
 /**
  * Cat command.
  * Acts almost like standard gnu cat, but if called without
- * arguments it reads input until 2 consequent new lines are read
+ * arguments it reads input until "EOF" string read
  */
 class CatExecutor : CmdExecutor() {
-    val argSplitter = SimpleArgsParser()
+    val argSplitter = ArgsSplitter()
+    val eofString = "EOF"
 
     override fun name(): String {
         return "cat"
@@ -53,19 +54,16 @@ class CatExecutor : CmdExecutor() {
     }
 
     private fun execNoArgs(input: InputStream, output: OutputStream) {
-        var feedCnt = 0
         val reader = input.bufferedReader()
         val writer = output.bufferedWriter()
         while (true) {
             val line = reader.readLine()
-            if (line.isEmpty()) {
-                feedCnt += 1
+            if (line == null || line == eofString) {
+                break
             }
             writer.write(line)
             writer.newLine()
-            if (feedCnt == 2) {
-                break
-            }
+            writer.flush()
         }
         writer.flush()
     }
