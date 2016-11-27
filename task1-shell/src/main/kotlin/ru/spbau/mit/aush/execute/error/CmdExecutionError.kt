@@ -1,5 +1,7 @@
 package ru.spbau.mit.aush.execute.error
 
-
-class CmdExecutionError(msg: String) : RuntimeException(msg) {
-}
+/**
+ * Exception, which should be thrown in case of any error during
+ * commands execution
+ */
+class CmdExecutionError(msg: String) : RuntimeException(msg)

@@ -1,7 +1,8 @@
 package ru.spbau.mit.aush.execute.cmd
 
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
-import ru.spbau.mit.aush.parse.ArgsSplitter
+import ru.spbau.mit.aush.log.Logging
+import ru.spbau.mit.aush.parse.ArgsTokenizer
 import java.io.BufferedWriter
 import java.io.InputStream
 import java.io.OutputStream
@@ -9,7 +10,7 @@ import java.io.OutputStreamWriter
 
 
 class EchoExecutor : CmdExecutor() {
-    val argSplitter = ArgsSplitter()
+    val logger = Logging.getLogger("EchoExecutor")
     val separator = " "
 
     override fun name(): String {
@@ -17,12 +18,13 @@ class EchoExecutor : CmdExecutor() {
     }
 
     override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
+        logger.info("Parsing arguments...")
         val argStrings = try {
-            argSplitter.parse(args)
+            ArgsTokenizer(args).tokenize()
         } catch (e: IllegalArgumentException) {
             throw BadCmdArgsError("Bad echo args =/")
         }
-
+        logger.info("Writing them to buffer...")
         val writer = BufferedWriter(OutputStreamWriter(outStream))
         argStrings.forEachIndexed { i, s ->
             writer.write(s)
@@ -30,6 +32,7 @@ class EchoExecutor : CmdExecutor() {
                 writer.write(separator)
             }
         }
+        logger.info("Buffer written...flushing...")
         writer.newLine()
         writer.flush()
         return 0

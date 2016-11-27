@@ -1,9 +1,8 @@
 package ru.spbau.mit.aush.execute.cmd
 
-import jdk.internal.util.xml.impl.Input
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
-import ru.spbau.mit.aush.parse.ArgsSplitter
+import ru.spbau.mit.aush.parse.ArgsTokenizer
 import java.io.*
 
 /**
@@ -12,7 +11,6 @@ import java.io.*
  * arguments it reads input until "EOF" string read
  */
 class CatExecutor : CmdExecutor() {
-    val argSplitter = ArgsSplitter()
     val eofString = "EOF"
 
     override fun name(): String {
@@ -21,7 +19,7 @@ class CatExecutor : CmdExecutor() {
 
     override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
         val parsedArgs = try {
-            argSplitter.parse(args)
+            ArgsTokenizer(args).tokenize()
         } catch (e: IllegalArgumentException) {
             throw BadCmdArgsError("Bad cat args =/")
         }

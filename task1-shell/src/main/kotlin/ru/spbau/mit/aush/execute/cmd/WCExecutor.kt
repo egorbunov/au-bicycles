@@ -1,9 +1,11 @@
 package ru.spbau.mit.aush.execute.cmd
 
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
-import ru.spbau.mit.aush.parse.ArgsSplitter
-import java.io.*
-import javax.xml.stream.events.Characters
+import ru.spbau.mit.aush.parse.ArgsTokenizer
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.InputStream
+import java.io.OutputStream
 
 /**
  * Calculates and writes new line, word and character counts
@@ -14,7 +16,6 @@ import javax.xml.stream.events.Characters
  * Output: lines words chars
  */
 class WCExecutor : CmdExecutor() {
-    val argSplitter = ArgsSplitter()
     val eofString = "EOF"
 
     override fun name(): String {
@@ -23,11 +24,11 @@ class WCExecutor : CmdExecutor() {
 
     override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
         val parsedArgs = try {
-            argSplitter.parse(args)
+            ArgsTokenizer(args).tokenize()
         } catch (e: IllegalArgumentException) {
             throw BadCmdArgsError("Bad wc args =/")
         }
-        var counts = if (parsedArgs.isEmpty()) {
+        val counts = if (parsedArgs.isEmpty()) {
             execNoArgs(inStream)
         } else {
             execWithArgs(parsedArgs)

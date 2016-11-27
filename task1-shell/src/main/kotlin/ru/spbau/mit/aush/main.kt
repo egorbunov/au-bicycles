@@ -4,7 +4,10 @@ import ru.spbau.mit.aush.execute.AushContext
 import ru.spbau.mit.aush.execute.AushInterpreter
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
+import ru.spbau.mit.aush.log.Logging
 import ru.spbau.mit.aush.parse.AushParser
+import ru.spbau.mit.aush.parse.error.ParseErr
+import ru.spbau.mit.aush.parse.error.TokenErr
 
 /**
  * Created by: Egor Gorbunov
@@ -14,9 +17,10 @@ import ru.spbau.mit.aush.parse.AushParser
 
 
 fun main(args: Array<String>) {
+    val logger = Logging.getLogger("Main")
     val pareser = AushParser()
     val context = AushContext()
-    val interpreter = AushInterpreter(context, System.`in`, System.out)
+    val interpreter = AushInterpreter(context)
     val replReader = System.`in`.bufferedReader()
     while (true) {
         print("aush >> ")
@@ -24,17 +28,27 @@ fun main(args: Array<String>) {
         if (line.isBlank()) {
             continue
         }
-        val statement = pareser.parse(line)
+        logger.info("Parsing statement...")
+        val statement = try {
+            pareser.parse(line)
+        } catch (e: TokenErr) {
+            println("${e.message}")
+            continue
+        } catch (e: ParseErr) {
+            println("${e.message}")
+            continue
+        }
         if (statement === null) {
             println("Error: bad syntax...")
             continue
         }
         try {
+            logger.info("Executing statement...")
             interpreter.execute(statement)
         } catch (e: CmdExecutionError) {
-            println("Error: ${e.message}")
+            println("${e.message}")
         } catch (e: BadCmdArgsError) {
-            println("Error: ${e.message}")
+            println("${e.message}")
         }
     }
-}
+ }

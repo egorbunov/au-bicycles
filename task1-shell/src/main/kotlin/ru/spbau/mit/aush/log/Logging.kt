@@ -6,8 +6,6 @@ import java.util.logging.Logger
 import java.util.logging.SimpleFormatter
 
 
-
-
 object Logging {
     private val fileHandler: FileHandler
 
@@ -19,7 +17,7 @@ object Logging {
         fileHandler.formatter = formatter
     }
 
-    public fun getLogger(name: String): Logger {
+    @JvmStatic fun getLogger(name: String): Logger {
         val logger = Logger.getLogger(name)
         logger.useParentHandlers = false
         logger.addHandler(fileHandler)
