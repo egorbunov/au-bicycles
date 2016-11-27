@@ -37,3 +37,6 @@ aush >> ${PRINT_MY_WORKING_DIRECTORY}
 /home/user/repos/au-bicycles/task1-shell
 aush >> exit
 ```
+
+## Class diagram sketch
+![Diagram](diagram.png)
