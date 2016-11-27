@@ -1,6 +1,7 @@
 package ru.spbau.mit.aush.execute.cmd
 
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
+import ru.spbau.mit.aush.parse.ArgsPrepare
 import ru.spbau.mit.aush.parse.ArgsTokenizer
 import java.io.FileInputStream
 import java.io.FileNotFoundException
@@ -24,7 +25,7 @@ class WCExecutor : CmdExecutor() {
 
     override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
         val parsedArgs = try {
-            ArgsTokenizer(args).tokenize()
+            ArgsPrepare.prepare(ArgsTokenizer(args).tokenize())
         } catch (e: IllegalArgumentException) {
             throw BadCmdArgsError("Bad wc args =/")
         }

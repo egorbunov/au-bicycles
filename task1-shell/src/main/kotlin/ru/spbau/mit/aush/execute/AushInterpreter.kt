@@ -11,6 +11,7 @@ import ru.spbau.mit.aush.execute.error.CmdExecutionError
 import ru.spbau.mit.aush.execute.process.ProcessBuilderCreator
 import ru.spbau.mit.aush.execute.process.ProcessPiper
 import ru.spbau.mit.aush.log.Logging
+import ru.spbau.mit.aush.parse.ArgsPrepare
 import ru.spbau.mit.aush.parse.ArgsTokenizer
 import ru.spbau.mit.aush.parse.Statement
 import ru.spbau.mit.aush.parse.visitor.VarReplacingVisitor
@@ -89,7 +90,7 @@ class AushInterpreter(val context: AushContext) {
             ProcessBuilderCreator.createExternalCmdPB(
                     statement.cmdName,
                     try {
-                        ArgsTokenizer(statement.args).tokenize()
+                        ArgsPrepare.prepare(ArgsTokenizer(statement.args).tokenize())
                     } catch (e: IllegalArgumentException) {
                         emptyList<String>()
                     }
