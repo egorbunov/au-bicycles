@@ -35,11 +35,7 @@ fun main(args: Array<String>) {
             println("${e.message}")
             continue
         } catch (e: ParseErr) {
-            println("${e.message}")
-            continue
-        }
-        if (statement === null) {
-            println("Error: bad syntax...")
+            println("ERROR: can't parse statement!")
             continue
         }
         try {
@@ -51,4 +47,4 @@ fun main(args: Array<String>) {
             println("${e.message}")
         }
     }
- }
+}

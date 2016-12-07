@@ -34,7 +34,7 @@ class CatExecutorTest {
         val catOutReader = BufferedReader(InputStreamReader(catOutputIn))
         val linesOut = catOutReader.readLines()
 
-        Assert.assertArrayEquals(linesIn.toTypedArray().sliceArray(0..linesIn.size-2), linesOut.toTypedArray())
+        Assert.assertArrayEquals(linesIn.toTypedArray().sliceArray(0..linesIn.size - 2), linesOut.toTypedArray())
     }
 
     @Test

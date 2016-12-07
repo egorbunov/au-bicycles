@@ -10,6 +10,9 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 
 
+/**
+ * Echo command imitation. Just like linux echo.
+ */
 class EchoExecutor : CmdExecutor() {
     val logger = Logging.getLogger("EchoExecutor")
     val separator = " "

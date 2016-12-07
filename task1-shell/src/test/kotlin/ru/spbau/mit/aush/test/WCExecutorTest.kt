@@ -37,11 +37,13 @@ class WCExecutorTest {
         Assert.assertTrue(linesOut.size == 1)
 
         val counts = linesIn.fold(Triple(0, 0, 0),
-                { t, w -> Triple(
-                        t.first + 1,
-                        t.second + if (w.isBlank()) 0 else w.trim().split(Regex("\\s")).size,
-                        t.third + w.length + 1
-                )})
+                { t, w ->
+                    Triple(
+                            t.first + 1,
+                            t.second + if (w.isBlank()) 0 else w.trim().split(Regex("\\s")).size,
+                            t.third + w.length + 1
+                    )
+                })
 
         Assert.assertEquals("${counts.first} ${counts.second} ${counts.third}", linesOut[0])
     }
@@ -65,12 +67,14 @@ class WCExecutorTest {
         wcExecutor.exec(argsStr, System.`in`, wcOutput)
         wcOutput.close()
 
-        val counts = filesLines.flatMap{ it }.fold(Triple(0, 0, 0),
-                { t, w -> Triple(
-                        t.first + 1,
-                        t.second + if (w.isBlank()) 0 else w.trim().split(Regex("\\s")).size,
-                        t.third + w.length + 1
-                )})
+        val counts = filesLines.flatMap { it }.fold(Triple(0, 0, 0),
+                { t, w ->
+                    Triple(
+                            t.first + 1,
+                            t.second + if (w.isBlank()) 0 else w.trim().split(Regex("\\s")).size,
+                            t.third + w.length + 1
+                    )
+                })
 
 
         val wcOutReader = BufferedReader(InputStreamReader(wcOutputIn))
@@ -91,3 +95,4 @@ class WCExecutorTest {
         return file.absolutePath.toString()
     }
 }
+

@@ -50,5 +50,4 @@ class VarReplaceTest(val str: String,
         val actualReplaceStatement = replacer.replace(statement)
         Assert.assertTrue(actualReplaceStatement == expectedStatement)
     }
-
 }

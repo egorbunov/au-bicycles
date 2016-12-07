@@ -4,7 +4,6 @@ import java.io.InputStream
 import java.io.OutputStream
 
 
-
 /**
  * Every AUSH built in command (such as `echo`) executor
  * must be inherited from `CmdExecutor`

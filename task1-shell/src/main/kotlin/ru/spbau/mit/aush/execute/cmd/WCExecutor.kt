@@ -61,7 +61,7 @@ class WCExecutor : CmdExecutor() {
 
     private fun execWithArgs(args: List<String>): Triple<Int, Int, Int> {
         return args.map { handleOneFile(it) }.fold(Triple(0, 0, 0),
-                { a, b -> Triple(a.first + b.first, a.second + b.second, a.third + b.third)} )
+                { a, b -> Triple(a.first + b.first, a.second + b.second, a.third + b.third) })
     }
 
     private fun handleOneFile(name: String): Triple<Int, Int, Int> {

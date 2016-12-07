@@ -39,5 +39,4 @@ class ArgsTokenizerTest(val str: String,
         print(actualParse)
         Assert.assertArrayEquals(expectedSplit.toTypedArray(), actualParse.toTypedArray())
     }
-
 }
