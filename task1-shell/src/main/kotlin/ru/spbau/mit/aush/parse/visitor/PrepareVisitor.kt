@@ -1,11 +1,17 @@
 package ru.spbau.mit.aush.parse.visitor
 
 import ru.spbau.mit.aush.parse.Statement
+import ru.spbau.mit.aush.util.isDoubleQuoted
+import ru.spbau.mit.aush.util.isNotQuoted
+import ru.spbau.mit.aush.util.isSingleQuoted
 import ru.spbau.mit.aush.util.unquote
 import java.util.*
 
 /**
- * Creates new statement, there unquoting is performed and escaped characters handled
+ * Creates new statement, there unquoting is performed and escaped characters handled:
+ *
+ * 1) if one token is quoted --> perform all escaped characters unpacking (delete slash)
+ * 2) it token is not quoted --> perform de-escaping quotes inside
  */
 class PrepareVisitor : StatementVisitor {
     val statementStack = LinkedList<Statement>()
@@ -17,7 +23,13 @@ class PrepareVisitor : StatementVisitor {
     }
 
     private fun prepare(str: String): String {
-        return unquote(str).replace(Regex("\\\\(.)"), { it.groupValues[1] })
+        if (isSingleQuoted(str)) {
+            return unquote(str).replace(Regex("\\\\'"), "'")
+        } else if (isDoubleQuoted(str)) {
+            return unquote(str).replace(Regex("\\\\\""), "\"")
+        } else {
+            return str.replace(Regex("\\\\(.)"), { it.groupValues[1] })
+        }
     }
 
     override fun visit(assign: Statement.Assign) {
