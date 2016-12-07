@@ -11,9 +11,8 @@ import ru.spbau.mit.aush.execute.error.CmdExecutionError
 import ru.spbau.mit.aush.execute.process.ProcessBuilderCreator
 import ru.spbau.mit.aush.execute.process.ProcessPiper
 import ru.spbau.mit.aush.log.Logging
-import ru.spbau.mit.aush.parse.ArgsPrepare
-import ru.spbau.mit.aush.parse.ArgsTokenizer
 import ru.spbau.mit.aush.parse.Statement
+import ru.spbau.mit.aush.parse.visitor.PrepareVisitor
 import ru.spbau.mit.aush.parse.visitor.VarReplacingVisitor
 import java.io.IOException
 
@@ -55,10 +54,13 @@ class AushInterpreter(val context: AushContext) {
         val replacer = VarReplacingVisitor(context)
         val statementWithVars = replacer.replace(statement)
 
-        when (statementWithVars) {
-            is Statement.Cmd -> execSimpleCmd(statementWithVars)
-            is Statement.Pipe -> execPipedCmd(statementWithVars)
-            is Statement.Assign -> execAssignCmd(statementWithVars)
+        val preparer = PrepareVisitor()
+        val statementToExecute = preparer.prepareStatement(statementWithVars)
+
+        when (statementToExecute) {
+            is Statement.Cmd -> execSimpleCmd(statementToExecute)
+            is Statement.Pipe -> execPipedCmd(statementToExecute)
+            is Statement.Assign -> execAssignCmd(statementToExecute)
         }
     }
 
@@ -89,11 +91,7 @@ class AushInterpreter(val context: AushContext) {
         } else {
             ProcessBuilderCreator.createExternalCmdPB(
                     statement.cmdName,
-                    try {
-                        ArgsPrepare.prepare(ArgsTokenizer(statement.args).tokenize())
-                    } catch (e: IllegalArgumentException) {
-                        emptyList<String>()
-                    }
+                    statement.args
             )
         }
         return pb

@@ -8,16 +8,18 @@ object ProcessBuilderCreator {
     /**
      * Creates process builder for built in command; Such commands are executed with help of JVM;
      * @param cmdExecutorClass class of command executor to be prepared as a process
-     * @param argumentsStr arguments of command executor
+     * @param arguments arguments of command executor
      */
-    fun createBuiltinCmdPB(cmdExecutorClass: String, argumentsStr: String): ProcessBuilder {
+    fun createBuiltinCmdPB(cmdExecutorClass: String, arguments: List<String>): ProcessBuilder {
         val jvm = System.getProperty("java.home") + File.separator + "bin" + File.separator + "java"
         val classpath = System.getProperty("java.class.path")
         val command = ArrayList<String>()
         command.add(jvm)
         command.add(BuiltinCmdContainer::class.java.canonicalName)
         command.add(cmdExecutorClass)
-        command.add(argumentsStr)
+        for (arg in arguments) {
+            command.add(arg)
+        }
         val processBuilder = ProcessBuilder(command)
         val environment = processBuilder.environment()
         environment.put("CLASSPATH", classpath)

@@ -22,7 +22,7 @@ class AushParser() {
                 "|${ParseRegExes.singleQuotedRegex}" + // OR double quoted string with escaped chars
                 "|${ParseRegExes.doubleQuotedRegex})")    // OR single quoted string with escaped chars
         val m = pattern.matchEntire(str) ?: return null
-        return Statement.Assign(m.groupValues[1], unquote(m.groupValues[2]))
+        return Statement.Assign(m.groupValues[1], m.groupValues[2])
     }
 
     private fun parsePipedCmd(tokens: List<String>): Statement.Pipe? {
@@ -47,6 +47,6 @@ class AushParser() {
             return null
         }
         val args = tokens.slice(1..tokens.size - 1)
-        return Statement.Cmd(tokens[0], if (args.isEmpty()) "" else args.joinToString(" "))
+        return Statement.Cmd(tokens[0], args)
     }
 }

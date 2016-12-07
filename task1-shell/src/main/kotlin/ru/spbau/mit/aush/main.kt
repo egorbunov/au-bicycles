@@ -9,12 +9,6 @@ import ru.spbau.mit.aush.parse.AushParser
 import ru.spbau.mit.aush.parse.error.ParseErr
 import ru.spbau.mit.aush.parse.error.TokenErr
 
-/**
- * Created by: Egor Gorbunov
- * Date: 9/21/16
- * Email: egor-mailbox@ya.com
- */
-
 
 fun main(args: Array<String>) {
     val logger = Logging.getLogger("Main")

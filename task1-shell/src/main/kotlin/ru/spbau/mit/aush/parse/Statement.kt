@@ -1,5 +1,6 @@
 package ru.spbau.mit.aush.parse
 
+import com.google.common.hash.HashCode
 import ru.spbau.mit.aush.parse.visitor.StatementVisitor
 import java.util.*
 
@@ -15,13 +16,13 @@ sealed class Statement {
      * Simple command line utility call statement like:
      *     `echo -n "Hello" "World"`
      */
-    class Cmd(val cmdName: String, val args: String) : Statement() {
+    class Cmd(val cmdName: String, val args: List<String>) : Statement() {
         override fun accept(visitor: StatementVisitor) {
             visitor.visit(this)
         }
 
         override fun toString(): String {
-            return "CmdExecutor($cmdName${if (args.isEmpty()) "" else ", $args"})"
+            return "CmdExecutor($cmdName, $args)"
         }
 
         override fun equals(other: Any?): Boolean {

@@ -3,7 +3,9 @@ package ru.spbau.mit.aush.parse
 import ru.spbau.mit.aush.parse.error.TokenErr
 import java.util.*
 
-
+/**
+ * Argument tokenizer. Splits string into tokens properly.
+ */
 class ArgsTokenizer(val str: String) {
     val separatorTokens = setOf('|')
 

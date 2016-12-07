@@ -18,16 +18,11 @@ class CatExecutor : CmdExecutor() {
         return "cat"
     }
 
-    override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
-        val parsedArgs = try {
-            ArgsPrepare.prepare(ArgsTokenizer(args).tokenize())
-        } catch (e: IllegalArgumentException) {
-            throw BadCmdArgsError("Bad cat args =/")
-        }
-        if (parsedArgs.isEmpty()) {
+    override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
+        if (args.isEmpty()) {
             execNoArgs(inStream, outStream)
         } else {
-            execWithArgs(parsedArgs, outStream)
+            execWithArgs(args, outStream)
         }
         return 0
     }

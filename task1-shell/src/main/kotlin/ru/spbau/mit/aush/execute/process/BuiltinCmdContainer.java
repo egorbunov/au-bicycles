@@ -4,6 +4,9 @@ package ru.spbau.mit.aush.execute.process;
 import ru.spbau.mit.aush.execute.cmd.CmdExecutor;
 import ru.spbau.mit.aush.log.Logging;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -15,13 +18,14 @@ class BuiltinCmdContainer {
     private static final Logger logger = Logging.getLogger("BuiltinCmdContainer");
 
     public static void main(String[] args) {
-        if (args.length != 2) {
-            logger.severe("Bad container arguments!");
-            throw new IllegalArgumentException("not enough arguments");
-        }
+//        if (args.length != 2) {
+//            logger.severe("Bad container arguments!");
+//            throw new IllegalArgumentException("not enough arguments");
+//        }
 
         String executorClassName = args[0];
-        String argsStr = args[1];
+        List<String> commandArguments = new ArrayList<>();
+        commandArguments.addAll(Arrays.asList(args).subList(1, args.length));
 
         Class executorClass = null;
         try {
@@ -39,6 +43,6 @@ class BuiltinCmdContainer {
             System.exit(1);
         }
 
-        cmdExecutor.exec(argsStr, System.in, System.out);
+        cmdExecutor.exec(commandArguments, System.in, System.out);
     }
 }

@@ -2,6 +2,9 @@ package ru.spbau.mit.aush.parse.visitor
 
 import ru.spbau.mit.aush.execute.AushContext
 import ru.spbau.mit.aush.parse.Statement
+import ru.spbau.mit.aush.util.isDoubleQuoted
+import ru.spbau.mit.aush.util.isNotQuoted
+import ru.spbau.mit.aush.util.isSingleQuoted
 import java.util.*
 
 
@@ -22,7 +25,7 @@ class VarReplacingVisitor(val context: AushContext) : StatementVisitor {
 
     override fun visit(cmd: Statement.Cmd) {
         val newCmdName = replaceVars(cmd.cmdName)
-        val newArgs = replaceVars(cmd.args)
+        val newArgs= cmd.args.map { if (isSingleQuoted(it)) it else replaceVars(it) }
         statementStack.addLast(Statement.Cmd(newCmdName, newArgs))
     }
 

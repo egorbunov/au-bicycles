@@ -17,12 +17,10 @@ class EchoExecutorTest {
         val out = PipedOutputStream()
         val outIn = PipedInputStream(out)
 
-        val args = listOf("a", "b", "\"a and b\"", "'a and b'", "\\n", "'\\''", "\"\\\"\"")
-        val expectedStr = "a b a and b a and b n ' \""
-        val argsStr = args.joinToString(" ")
+        val args = listOf("a", "b", "c and d")
+        val expectedStr = "a b c and d"
 
-
-        echoExecutor.exec(argsStr, System.`in`, out)
+        echoExecutor.exec(args, System.`in`, out)
         out.close()
 
         val reader = BufferedReader(InputStreamReader(outIn))

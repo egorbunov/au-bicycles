@@ -21,18 +21,12 @@ class EchoExecutor : CmdExecutor() {
         return "echo"
     }
 
-    override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
-        logger.info("Parsing arguments...")
-        val argStrings = try {
-            ArgsPrepare.prepare(ArgsTokenizer(args).tokenize())
-        } catch (e: IllegalArgumentException) {
-            throw BadCmdArgsError("Bad echo args =/")
-        }
-        logger.info("Writing them to buffer...")
+    override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
+        logger.info("Writing arguments to buffer...")
         val writer = BufferedWriter(OutputStreamWriter(outStream))
-        argStrings.forEachIndexed { i, s ->
+        args.forEachIndexed { i, s ->
             writer.write(s)
-            if (i < argStrings.size - 1) {
+            if (i < args.size - 1) {
                 writer.write(separator)
             }
         }

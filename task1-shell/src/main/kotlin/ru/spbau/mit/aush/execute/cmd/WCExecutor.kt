@@ -23,16 +23,11 @@ class WCExecutor : CmdExecutor() {
         return "wc"
     }
 
-    override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
-        val parsedArgs = try {
-            ArgsPrepare.prepare(ArgsTokenizer(args).tokenize())
-        } catch (e: IllegalArgumentException) {
-            throw BadCmdArgsError("Bad wc args =/")
-        }
-        val counts = if (parsedArgs.isEmpty()) {
+    override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
+        val counts = if (args.isEmpty()) {
             execNoArgs(inStream)
         } else {
-            execWithArgs(parsedArgs)
+            execWithArgs(args)
         }
         val writer = outStream.bufferedWriter()
         writer.write("${counts.first} ${counts.second} ${counts.third}")

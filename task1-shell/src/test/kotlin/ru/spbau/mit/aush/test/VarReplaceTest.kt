@@ -9,11 +9,6 @@ import ru.spbau.mit.aush.parse.*
 import ru.spbau.mit.aush.parse.visitor.VarReplacingVisitor
 import java.util.*
 
-/**
- * Created by: Egor Gorbunov
- * Date: 9/24/16
- * Email: egor-mailbox@ya.com
- */
 
 @RunWith(Parameterized::class)
 class VarReplaceTest(val str: String,
@@ -34,13 +29,15 @@ class VarReplaceTest(val str: String,
         @JvmStatic fun testData(): Collection<Any> {
             return Arrays.asList(
                     arrayOf("echo \$X",
-                            Statement.Cmd("echo", "hello")),
+                            Statement.Cmd("echo", listOf("hello"))),
                     arrayOf("echo \${y}_end",
-                            Statement.Cmd("echo", "world_end")),
+                            Statement.Cmd("echo", listOf("world_end"))),
                     arrayOf("echo \$X\$y",
-                            Statement.Cmd("echo", "helloworld")),
+                            Statement.Cmd("echo", listOf("helloworld"))),
                     arrayOf("\$CMD \${X} \${y}",
-                            Statement.Cmd("echo", "hello world"))
+                            Statement.Cmd("echo", listOf("hello", "world"))),
+                    arrayOf("echo '\$X' \"\$X\"",
+                            Statement.Cmd("echo", listOf("'\$X'", "\"hello\"")))
             )
         }
     }
@@ -48,6 +45,6 @@ class VarReplaceTest(val str: String,
     @Test fun testReplace() {
         val statement = parser.parse(str)!!
         val actualReplaceStatement = replacer.replace(statement)
-        Assert.assertTrue(actualReplaceStatement == expectedStatement)
+        Assert.assertEquals(expectedStatement, actualReplaceStatement)
     }
 }

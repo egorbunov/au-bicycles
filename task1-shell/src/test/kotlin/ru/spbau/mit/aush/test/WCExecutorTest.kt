@@ -26,7 +26,7 @@ class WCExecutorTest {
         val catOutput = PipedOutputStream()
         val catOutputIn = PipedInputStream(catOutput)
 
-        wcExecutor.exec("", wcInput, catOutput)
+        wcExecutor.exec(emptyList(), wcInput, catOutput)
         wcInput.close()
         linesOutStream.close()
         writer.close()
@@ -59,12 +59,10 @@ class WCExecutorTest {
         )
         val fileNames = filesLines.map { createFileWithContents(it) }
 
-        val argsStr = fileNames.joinToString(" ")
-
         val wcOutput = PipedOutputStream()
         val wcOutputIn = PipedInputStream(wcOutput)
 
-        wcExecutor.exec(argsStr, System.`in`, wcOutput)
+        wcExecutor.exec(fileNames, System.`in`, wcOutput)
         wcOutput.close()
 
         val counts = filesLines.flatMap { it }.fold(Triple(0, 0, 0),

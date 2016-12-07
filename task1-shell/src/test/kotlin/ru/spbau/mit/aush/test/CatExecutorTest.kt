@@ -25,7 +25,7 @@ class CatExecutorTest {
         val catOutput = PipedOutputStream()
         val catOutputIn = PipedInputStream(catOutput)
 
-        catExecutor.exec("", catInput, catOutput)
+        catExecutor.exec(emptyList(), catInput, catOutput)
         catInput.close()
         linesOutStream.close()
         writer.close()
@@ -48,13 +48,11 @@ class CatExecutorTest {
         )
         val fileNames = filesLines.map { createFileWithContents(it) }
 
-        val argsStr = fileNames.joinToString(" ")
-
         val dummyInputStream = System.`in`
         val catOutput = PipedOutputStream()
         val catOutputIn = PipedInputStream(catOutput)
 
-        catExecutor.exec(argsStr, dummyInputStream, catOutput)
+        catExecutor.exec(fileNames, dummyInputStream, catOutput)
         catOutput.close()
 
         val catOutReader = BufferedReader(InputStreamReader(catOutputIn))

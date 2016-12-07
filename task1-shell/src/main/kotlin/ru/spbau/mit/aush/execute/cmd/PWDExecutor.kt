@@ -11,7 +11,7 @@ class PWDExecutor : CmdExecutor() {
         return "pwd"
     }
 
-    override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
+    override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         val writer = outStream.bufferedWriter()
         writer.write(System.getProperty("user.dir"))
         writer.newLine()

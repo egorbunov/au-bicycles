@@ -12,8 +12,7 @@ class ExitExecutor : CmdExecutor() {
         return "exit"
     }
 
-    override fun exec(args: String, inStream: InputStream, outStream: OutputStream): Int {
+    override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         exitProcess(0)
-        return 0
     }
 }

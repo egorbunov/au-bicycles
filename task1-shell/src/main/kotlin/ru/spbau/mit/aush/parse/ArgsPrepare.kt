@@ -1,17 +1,13 @@
 package ru.spbau.mit.aush.parse
 
+import ru.spbau.mit.aush.util.unquote
 
 object ArgsPrepare {
     fun prepare(tokens: List<String>): List<String> {
         return tokens
+                .map(::unquote)
                 .map { s ->
-                    if (s.first() == s.last() && (s.first() == '\'' || s.first() == '"')) {
-                        s.substring(1, s.lastIndex)
-                    } else {
-                        s
-                    }
-                }
-                .map { s ->
+                    // escaped characters
                     s.replace(Regex("\\\\(.)"), { mr -> mr.groupValues[1] })
                 }.toList()
     }
