@@ -12,11 +12,12 @@ import java.io.*
  * arguments it reads input until "EOF" string read
  */
 class CatExecutor : CmdExecutor() {
-    val eofString = "EOF"
+    override fun usage(): String =
+        "`cat [FILE]...` or `cmd | cat` or just `cat`"
 
-    override fun name(): String {
-        return "cat"
-    }
+    private val eofString = "EOF"
+
+    override fun name() = "cat"
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         if (args.isEmpty()) {

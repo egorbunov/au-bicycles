@@ -17,11 +17,12 @@ import java.io.OutputStream
  * Output: lines words chars
  */
 class WCExecutor : CmdExecutor() {
+    override fun usage(): String =
+            "`wc [FILE]...` or `echo hello | wc`"
+
     val eofString = "EOF"
 
-    override fun name(): String {
-        return "wc"
-    }
+    override fun name() = "wc"
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         val counts = if (args.isEmpty()) {

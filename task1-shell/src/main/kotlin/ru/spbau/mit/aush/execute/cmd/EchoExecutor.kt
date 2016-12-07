@@ -14,12 +14,13 @@ import java.io.OutputStreamWriter
  * Echo command imitation. Just like linux echo.
  */
 class EchoExecutor : CmdExecutor() {
+    override fun usage(): String =
+            "`echo [ARGS_TO_ECHO]...` or `cmd | echo`"
+
     val logger = Logging.getLogger("EchoExecutor")
     val separator = " "
 
-    override fun name(): String {
-        return "echo"
-    }
+    override fun name() = "echo"
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         logger.info("Writing arguments to buffer...")

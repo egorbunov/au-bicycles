@@ -35,7 +35,7 @@ class StatementPrepareTest(val str: String,
     }
 
     @Test fun testPrepare() {
-        val statement = parser.parse(str)!!
+        val statement = parser.parse(str)
         val actualStatement = preparer.prepareStatement(statement)
 
         Assert.assertEquals(expectedStatement, actualStatement)

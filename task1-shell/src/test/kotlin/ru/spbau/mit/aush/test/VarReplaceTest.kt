@@ -43,7 +43,7 @@ class VarReplaceTest(val str: String,
     }
 
     @Test fun testReplace() {
-        val statement = parser.parse(str)!!
+        val statement = parser.parse(str)
         val actualReplaceStatement = replacer.replace(statement)
         Assert.assertEquals(expectedStatement, actualReplaceStatement)
     }

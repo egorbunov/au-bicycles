@@ -8,8 +8,9 @@ import org.reflections.util.ConfigurationBuilder
 import ru.spbau.mit.aush.execute.cmd.CmdExecutor
 import ru.spbau.mit.aush.execute.cmd.ExitExecutor
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
-import ru.spbau.mit.aush.execute.process.ProcessBuilderCreator
 import ru.spbau.mit.aush.execute.process.ProcessPiper
+import ru.spbau.mit.aush.execute.process.createBuiltinCmdProcBuilder
+import ru.spbau.mit.aush.execute.process.createExternalCmdProcBuilder
 import ru.spbau.mit.aush.log.Logging
 import ru.spbau.mit.aush.parse.Statement
 import ru.spbau.mit.aush.parse.visitor.PrepareVisitor
@@ -84,12 +85,12 @@ class AushInterpreter(val context: AushContext) {
 
     private fun getProcessBuilder(statement: Statement.Cmd): ProcessBuilder {
         val pb = if (statement.cmdName in executorsClassNames) {
-            ProcessBuilderCreator.createBuiltinCmdPB(
+            createBuiltinCmdProcBuilder(
                     executorsClassNames[statement.cmdName]!!,
                     statement.args
             )
         } else {
-            ProcessBuilderCreator.createExternalCmdPB(
+            createExternalCmdProcBuilder(
                     statement.cmdName,
                     statement.args
             )

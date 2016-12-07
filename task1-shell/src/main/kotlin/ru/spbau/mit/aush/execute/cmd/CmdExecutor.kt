@@ -26,4 +26,9 @@ abstract class CmdExecutor {
      * @return exit code
      */
     abstract fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int
+
+    /**
+     * String with command usage
+     */
+    abstract fun usage(): String
 }

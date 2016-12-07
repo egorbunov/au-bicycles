@@ -8,9 +8,9 @@ import kotlin.system.exitProcess
  * Executor of exit command; Just terminates whole process
  */
 class ExitExecutor : CmdExecutor() {
-    override fun name(): String {
-        return "exit"
-    }
+    override fun usage(): String = "exit"
+
+    override fun name() = "exit"
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         exitProcess(0)
