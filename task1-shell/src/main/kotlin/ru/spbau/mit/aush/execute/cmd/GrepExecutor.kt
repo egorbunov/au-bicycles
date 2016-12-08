@@ -13,6 +13,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.util.*
 import java.util.regex.Pattern
+import java.util.regex.PatternSyntaxException
 
 /**
  * Grep command imitation.
@@ -52,7 +53,7 @@ class GrepExecutor : CmdExecutor() {
         }
 
         if (file.isEmpty()) {
-            grepStream(regex, inStream, outStream)
+            grepStream(finalRegex, inStream, outStream)
         } else {
             val fStream = try {
                 FileInputStream(file)
@@ -87,7 +88,11 @@ class GrepExecutor : CmdExecutor() {
 
     private fun grepStream(regexStr: String, input: InputStream, output: OutputStream) {
         val flags = if (caseInsensitive) Pattern.CASE_INSENSITIVE else 0
-        val pattern = Pattern.compile(regexStr, flags)
+        val pattern = try {
+            Pattern.compile(regexStr, flags)
+        } catch (e: PatternSyntaxException) {
+            throw CmdExecutionError("${e.description} at ${e.index} in ${e.pattern}")
+        }
 
         val reader = input.bufferedReader()
         val writer = output.bufferedWriter()
