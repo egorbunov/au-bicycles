@@ -1,11 +1,14 @@
 # AU Shell
 
+Pivotl tracker project: https://www.pivotaltracker.com/n/projects/1932763
+
 That is simple REPL command interpreter. It supports basic built-in commands:
 * cat
 * echo
 * wc
 * exit
 * pwd
+* grep 
 
 Also you can:
 
