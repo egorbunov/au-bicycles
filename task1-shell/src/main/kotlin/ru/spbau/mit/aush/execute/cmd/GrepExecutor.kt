@@ -29,6 +29,21 @@ import java.util.regex.PatternSyntaxException
  * must input 'EOF'
  */
 class GrepExecutor : CmdExecutor() {
+    private val logger = Logging.getLogger("GrepExecutor")
+    private val eofString = "EOF"
+
+    @Option(name = "-i", usage = "make matching case insensitive")
+    private var caseInsensitive: Boolean = false
+
+    @Option(name = "-w", usage = "match only whole words")
+    private var wholeWords: Boolean = false
+
+    @Option(name = "-A", usage = "number of lines after match to print")
+    private var numLinesAfterMatch: Int = 0
+
+    @Argument
+    private var otherArgs = ArrayList<String>()
+
     override fun usage(): String =
             "`grep [flags] <regex> <file>` or `echo smth | grep [flags] <regex>`"
 
@@ -63,28 +78,8 @@ class GrepExecutor : CmdExecutor() {
             grepStream(regex, fStream, outStream)
         }
 
-//        val bf = outStream.bufferedWriter()
-//        bf.write("-i: $caseInsensitive, -w: $wholeWords, -A: $numLinesAfterMatch, regex=$regex, file=$file")
-//        bf.newLine()
-//        bf.flush()
-
         return 0
     }
-
-    private val logger = Logging.getLogger("GrepExecutor")
-    private val eofString = "EOF"
-
-    @Option(name = "-i", usage = "make matching case insensitive")
-    private var caseInsensitive: Boolean = false
-
-    @Option(name = "-w", usage = "match only whole words")
-    private var wholeWords: Boolean = false
-
-    @Option(name = "-A", usage = "number of lines after match to print")
-    private var numLinesAfterMatch: Int = 0
-
-    @Argument
-    private var otherArgs = ArrayList<String>()
 
     private fun grepStream(regexStr: String, input: InputStream, output: OutputStream) {
         val flags = if (caseInsensitive) Pattern.CASE_INSENSITIVE else 0
@@ -120,8 +115,4 @@ class GrepExecutor : CmdExecutor() {
         }
         writer.flush()
     }
-
-
-
-
 }
