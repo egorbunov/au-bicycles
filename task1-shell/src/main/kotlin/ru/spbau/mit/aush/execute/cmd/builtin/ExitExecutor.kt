@@ -1,4 +1,4 @@
-package ru.spbau.mit.aush.execute.cmd
+package ru.spbau.mit.aush.execute.cmd.builtin
 
 import java.io.InputStream
 import java.io.OutputStream

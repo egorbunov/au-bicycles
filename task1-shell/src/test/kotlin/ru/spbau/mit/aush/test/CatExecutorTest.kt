@@ -3,7 +3,7 @@ package ru.spbau.mit.aush.test
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import ru.spbau.mit.aush.execute.cmd.CatExecutor
+import ru.spbau.mit.aush.execute.cmd.builtin.CatExecutor
 import java.io.*
 import org.junit.Assert
 
