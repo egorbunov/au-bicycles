@@ -1,5 +1,18 @@
 # AU Shell
 
+## Patterns used
+
+* Pattern *Command* used twice for builtin aush commands executors and for interpreter more abstract commands such as piped command or assign command
+    - See `InterpreterCommand` interface and it's implementors: `AssignCommand`, `PipedCommand` and `SimpleCommand` in `ru.spbau.mit.aush.execute.cmd` package
+* Pattern *Factory method* is used for creation of ProcessBuilders (they are used to run commands, passed to interpreter)
+    - See `AushCmdProcessBuilderFactory` in `ru.spbau.mit.aush.execute.process` package
+* Pattern *Visitor* used for variable substitution and other stuff on statement abstract tree
+    - See package `ru.spbau.mit.aush.parse.visitor`
+* Pattern *Composite* (almost) used in class hierarchy in `ru.spbau.mit.aush.parse.Statement` so `Statement.Pipe` is a composite of `Statement.Cmd`, which is `Statement` itself =)
+
+
+## About
+
 Pivotl tracker project: https://www.pivotaltracker.com/n/projects/1932763
 
 That is simple REPL command interpreter. It supports basic built-in commands:
