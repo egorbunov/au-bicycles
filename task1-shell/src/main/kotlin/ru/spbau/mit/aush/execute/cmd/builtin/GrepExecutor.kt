@@ -1,4 +1,4 @@
-package ru.spbau.mit.aush.execute.cmd
+package ru.spbau.mit.aush.execute.cmd.builtin
 
 import org.kohsuke.args4j.Argument
 import org.kohsuke.args4j.CmdLineException

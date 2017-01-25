@@ -4,7 +4,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import ru.spbau.mit.aush.execute.cmd.GrepExecutor
+import ru.spbau.mit.aush.execute.cmd.builtin.GrepExecutor
 import java.io.*
 
 class GrepExecutorTest {

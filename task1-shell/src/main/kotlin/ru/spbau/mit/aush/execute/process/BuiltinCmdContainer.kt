@@ -1,7 +1,7 @@
 package ru.spbau.mit.aush.execute.process
 
 
-import ru.spbau.mit.aush.execute.cmd.CmdExecutor
+import ru.spbau.mit.aush.execute.cmd.builtin.CmdExecutor
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
 import ru.spbau.mit.aush.log.Logging

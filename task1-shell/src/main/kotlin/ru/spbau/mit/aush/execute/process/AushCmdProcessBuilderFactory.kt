@@ -50,7 +50,7 @@ object AushCmdProcessBuilderFactory {
         val classpath = System.getProperty("java.class.path")
         val command = ArrayList<String>()
         command.add(jvm)
-        command.add(BuiltinCmdContainer::class.java.canonicalName)
+        command.add(BuiltinCmdContainer.javaClass.canonicalName)
         command.add(cmdExecutorClass)
         command += arguments
         val processBuilder = ProcessBuilder(command)
