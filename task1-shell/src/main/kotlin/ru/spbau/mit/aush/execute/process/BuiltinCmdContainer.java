@@ -1,7 +1,7 @@
 package ru.spbau.mit.aush.execute.process;
 
 
-import ru.spbau.mit.aush.execute.cmd.CmdExecutor;
+import ru.spbau.mit.aush.execute.cmd.builtin.CmdExecutor;
 import ru.spbau.mit.aush.log.Logging;
 
 import java.util.ArrayList;
@@ -18,11 +18,6 @@ class BuiltinCmdContainer {
     private static final Logger logger = Logging.getLogger("BuiltinCmdContainer");
 
     public static void main(String[] args) {
-//        if (args.length != 2) {
-//            logger.severe("Bad container arguments!");
-//            throw new IllegalArgumentException("not enough arguments");
-//        }
-
         String executorClassName = args[0];
         List<String> commandArguments = new ArrayList<>();
         commandArguments.addAll(Arrays.asList(args).subList(1, args.length));

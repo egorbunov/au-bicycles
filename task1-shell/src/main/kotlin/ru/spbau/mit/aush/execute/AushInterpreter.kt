@@ -5,8 +5,8 @@ import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
-import ru.spbau.mit.aush.execute.cmd.CmdExecutor
-import ru.spbau.mit.aush.execute.cmd.ExitExecutor
+import ru.spbau.mit.aush.execute.cmd.builtin.CmdExecutor
+import ru.spbau.mit.aush.execute.cmd.builtin.ExitExecutor
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
 import ru.spbau.mit.aush.execute.process.ProcessBuilderCreator
 import ru.spbau.mit.aush.execute.process.ProcessPiper
@@ -28,7 +28,7 @@ import java.io.IOException
 class AushInterpreter(val context: AushContext) {
     val logger = Logging.getLogger("AushInterpreter")
     val executorsClassNames: Map<String, String>
-    val exitCmdName: String
+    val exitCmdName: String = ExitExecutor().name()
 
     init {
         if (context.getVar(SpecialVars.PATH.name) == null) {
@@ -43,7 +43,6 @@ class AushInterpreter(val context: AushContext) {
                 .map { Pair(it.newInstance(), it) }
                 .map { it.first.name() to it.second.canonicalName }
                 .toMap()
-        exitCmdName = ExitExecutor().name()
     }
 
     /**
@@ -82,19 +81,10 @@ class AushInterpreter(val context: AushContext) {
         }
     }
 
-    private fun getProcessBuilder(statement: Statement.Cmd): ProcessBuilder {
-        val pb = if (statement.cmdName in executorsClassNames) {
-            ProcessBuilderCreator.createBuiltinCmdPB(
-                    executorsClassNames[statement.cmdName]!!,
-                    statement.args
-            )
-        } else {
-            ProcessBuilderCreator.createExternalCmdPB(
-                    statement.cmdName,
-                    statement.args
-            )
-        }
-        return pb
+    private fun execAssignCmd(statement: Statement.Assign) {
+        logger.info("Adding var: ${statement.varName}, value = ${statement.value}")
+        context.addVar(statement.varName, statement.value)
+        context.setExitCode(0)
     }
 
     /**
@@ -126,12 +116,21 @@ class AushInterpreter(val context: AushContext) {
             lastProcess.inputStream.close()
         }
         // calculating exit code (and waiting for process termination)
-        context.setExitCode(if (processes.map { it.waitFor() }.any { it == 0 }) 0 else 1)
+        context.setExitCode(if (processes.map { it.waitFor() }.all { it == 0 }) 0 else 1)
     }
 
-    private fun execAssignCmd(statement: Statement.Assign) {
-        logger.info("Adding var: ${statement.varName}, value = ${statement.value}")
-        context.addVar(statement.varName, statement.value)
-        context.setExitCode(0)
+    private fun getProcessBuilder(statement: Statement.Cmd): ProcessBuilder {
+        val pb = if (statement.cmdName in executorsClassNames) {
+            ProcessBuilderCreator.createBuiltinCmdPB(
+                    executorsClassNames[statement.cmdName]!!,
+                    statement.args
+            )
+        } else {
+            ProcessBuilderCreator.createExternalCmdPB(
+                    statement.cmdName,
+                    statement.args
+            )
+        }
+        return pb
     }
 }

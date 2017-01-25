@@ -1,4 +1,4 @@
-package ru.spbau.mit.aush.execute.cmd
+package ru.spbau.mit.aush.execute.cmd.builtin
 
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
 import ru.spbau.mit.aush.log.Logging

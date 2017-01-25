@@ -17,9 +17,7 @@ object ProcessBuilderCreator {
         command.add(jvm)
         command.add(BuiltinCmdContainer::class.java.canonicalName)
         command.add(cmdExecutorClass)
-        for (arg in arguments) {
-            command.add(arg)
-        }
+        command += arguments
         val processBuilder = ProcessBuilder(command)
         val environment = processBuilder.environment()
         environment.put("CLASSPATH", classpath)

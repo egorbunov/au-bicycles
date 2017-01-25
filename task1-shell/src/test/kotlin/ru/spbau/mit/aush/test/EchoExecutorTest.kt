@@ -2,7 +2,7 @@ package ru.spbau.mit.aush.test
 
 import org.junit.Assert
 import org.junit.Test
-import ru.spbau.mit.aush.execute.cmd.EchoExecutor
+import ru.spbau.mit.aush.execute.cmd.builtin.EchoExecutor
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PipedInputStream
