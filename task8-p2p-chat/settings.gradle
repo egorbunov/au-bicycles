@@ -1,0 +1,5 @@
+rootProject.name = 'p2chat'
+include 'p2chat-client'
+include 'p2chat-server'
+include 'p2chat-commons'
+

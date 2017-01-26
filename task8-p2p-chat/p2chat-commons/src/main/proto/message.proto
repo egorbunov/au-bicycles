@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option java_package = "ru.spbau.mit.sd.commons.proto";
+option java_outer_classname = "Protos";
+option java_multiple_files = true;
+
+message ChatUserInfo {
+    string name = 1;
+    string ipAddrStr = 2;
+}
+
+message UsersInfo {
+    repeated ChatUserInfo infos = 1;
+}
+
+message ChatMessage {
+    string text = 1;
+}
