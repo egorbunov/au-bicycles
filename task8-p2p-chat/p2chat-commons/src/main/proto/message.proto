@@ -4,9 +4,13 @@ option java_package = "ru.spbau.mit.sd.commons.proto";
 option java_outer_classname = "Protos";
 option java_multiple_files = true;
 
+message ChatUserIpAddr {
+    string ip = 1;
+    int32 port = 2;
+}
+
 message ChatUserInfo {
     string name = 1;
-    string ipAddrStr = 2;
 }
 
 message UsersInfo {
@@ -14,5 +18,41 @@ message UsersInfo {
 }
 
 message ChatMessage {
-    string text = 1;
+    int64 timestamp = 1;
+    string text = 2;
+}
+
+message PeerToServerMsg {
+    enum Type {
+        DISCONNECT = 0;
+        GET_USERS = 1;
+        CHANGE_NICKNAME = 2;
+    }
+
+    Type msgType = 1;
+    string newName = 2; // that is optional name, which will be passed only in case
+                        // of type CHANGE_NICKNAME
+}
+
+message ServerToPeerMsg {
+    enum Type {
+        PEER_CONNECTED = 0;
+        PEER_CHANGED_NAME = 1;
+        PEER_DISCONNECTED = 2;
+        USERS_INFO_DATA = 3;   // answer to GET_USERS request from peer
+    }
+
+    Type msgType = 1;
+
+    // this fields are filled in case PEER_CHANGED_NAME,
+    // PEER_CONNECTED and PEER_DISCONNECTED messages types
+    ChatUserIpAddr peerAddr = 2;
+    ChatUserInfo peerInfo = 3;
+
+    // this field is filled only in case of USERS_INFO_DATA msg type
+    UsersInfo usersInfo = 4;
+}
+
+message PeerToPeerMsg {
+    ChatMessage message = 2;
 }
