@@ -97,11 +97,15 @@ internal class OnePeerServer(val channel: AsynchronousSocketChannel,
 
     private fun dispatchMessage(message: PeerToServerMsg) {
         when (message.msgType!!) {
+            PeerToServerMsg.Type.START_CHATING -> eventProcessor.startChatting(
+                    channel.remoteAddress!!,
+                    message.userInfo!!
+            )
             PeerToServerMsg.Type.DISCONNECT -> eventProcessor.disconnectPeer(this)
             PeerToServerMsg.Type.GET_USERS -> eventProcessor.usersRequested(this)
             PeerToServerMsg.Type.CHANGE_INFO -> eventProcessor.peerChangedInfo(
                     channel.remoteAddress!!,
-                    message.newInfo!!
+                    message.userInfo!!
             )
             PeerToServerMsg.Type.UNRECOGNIZED -> {
                 logger.error("Bad [peer->server] message type!")

@@ -24,14 +24,15 @@ message ChatMessage {
 
 message PeerToServerMsg {
     enum Type {
-        DISCONNECT = 0;
-        GET_USERS = 1;
-        CHANGE_INFO = 2;
+        START_CHATING = 0;
+        DISCONNECT = 1;
+        GET_USERS = 2;
+        CHANGE_INFO = 3;
     }
 
     Type msgType = 1;
-    ChatUserInfo newInfo = 2; // that is optional name, which will be passed only in case
-                              // of type CHANGE_INFO
+    ChatUserInfo userInfo = 2; // that is optional name, which will be passed in case of
+                               // START_CHATTING and CHANGE_INFO
 }
 
 message ServerToPeerMsg {

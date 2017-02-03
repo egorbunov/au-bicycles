@@ -5,7 +5,6 @@ import ru.mit.spbau.sd.chat.server.ChatModelInterface
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
-import ru.spbau.mit.sd.commons.proto.UsersInfo
 import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
@@ -79,6 +78,13 @@ class ChatServer(val chatModel: ChatModelInterface) {
      * done with help of this anonymous event processor instance
      */
     private val peerEventProcessor = object: PeerEventProcessor {
+        override fun startChatting(peerAddress: SocketAddress, userInfo: ChatUserInfo) {
+            chatModel.addUser(
+                    socketAddrToId(peerAddress as InetSocketAddress),
+                    userInfo
+            )
+        }
+
         /**
          * Sends message with new info for changed peer.
          * Message is sent to each peer, except one, which made the change.
