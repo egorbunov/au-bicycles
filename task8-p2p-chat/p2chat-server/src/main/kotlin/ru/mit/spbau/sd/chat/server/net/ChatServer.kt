@@ -58,7 +58,13 @@ class ChatServer(val chatModel: ChatModelInterface) {
 
             override fun completed(result: AsynchronousSocketChannel?, attachment: Nothing?) {
                 logger.info("Accepted connection from peer: ${result!!.remoteAddress}")
-                peers.add(OnePeerServer(result, peerEventProcessor))
+                val newPeerServer = OnePeerServer(result, peerEventProcessor)
+                newPeerServer.start()
+
+                peers.add(newPeerServer)
+
+                // subscribe on accept again
+                serverSocket!!.accept(null, this)
             }
 
         })
@@ -94,7 +100,7 @@ class ChatServer(val chatModel: ChatModelInterface) {
                     .build()
 
             peers
-                    .filter { it.sock.remoteAddress != peerAddress }
+                    .filter { it.channel.remoteAddress != peerAddress }
                     .forEach { it.sendMessage(message) }
 
         }
@@ -104,7 +110,7 @@ class ChatServer(val chatModel: ChatModelInterface) {
          * have disconnected
          */
         override fun disconnectPeer(peer: OnePeerServer) {
-            val remotePeerAddress = peer.sock.remoteAddress as InetSocketAddress
+            val remotePeerAddress = peer.channel.remoteAddress as InetSocketAddress
             val peerId = socketAddrToId(remotePeerAddress)
             chatModel.removeUser(peerId)
             if (!peers.remove(peer)) {
@@ -128,8 +134,13 @@ class ChatServer(val chatModel: ChatModelInterface) {
          * Method, which creates response payload for peer request
          * to get all current chat users
          */
-        override fun requestUsers(): UsersInfo {
-            return chatModel.getUsers()
+        override fun usersRequested(peer: OnePeerServer) {
+            val users = chatModel.getUsers()
+            val responseMessage = ServerToPeerMsg.newBuilder()
+                    .setMsgType(ServerToPeerMsg.Type.USERS_INFO_DATA)
+                    .setUsersInfo(users)
+                    .build()
+            peer.sendMessage(responseMessage)
         }
 
     }

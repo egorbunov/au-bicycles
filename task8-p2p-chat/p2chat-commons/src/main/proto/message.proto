@@ -26,12 +26,12 @@ message PeerToServerMsg {
     enum Type {
         DISCONNECT = 0;
         GET_USERS = 1;
-        CHANGE_NICKNAME = 2;
+        CHANGE_INFO = 2;
     }
 
     Type msgType = 1;
-    string newName = 2; // that is optional name, which will be passed only in case
-                        // of type CHANGE_NICKNAME
+    ChatUserInfo newInfo = 2; // that is optional name, which will be passed only in case
+                              // of type CHANGE_INFO
 }
 
 message ServerToPeerMsg {

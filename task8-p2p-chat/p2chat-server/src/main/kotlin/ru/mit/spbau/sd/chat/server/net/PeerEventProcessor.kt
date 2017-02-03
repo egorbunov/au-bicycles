@@ -10,5 +10,5 @@ import java.net.SocketAddress
 internal interface PeerEventProcessor {
     fun disconnectPeer(peer: OnePeerServer)
     fun peerChangedInfo(peerAddress: SocketAddress, newInfo: ChatUserInfo)
-    fun requestUsers(): UsersInfo
+    fun usersRequested(peer: OnePeerServer)
 }
