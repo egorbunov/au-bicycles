@@ -29,7 +29,7 @@ internal class OnePeerServer(val channel: AsynchronousSocketChannel,
                              val msgProcessor: PeerMsgProcessor<OnePeerServer>) {
 
     companion object {
-        val logger = LoggerFactory.getLogger(OnePeerServer::class.java.simpleName)!!
+        val logger = LoggerFactory.getLogger(OnePeerServer::class.java)!!
     }
 
     private var readingState = createReadingState()

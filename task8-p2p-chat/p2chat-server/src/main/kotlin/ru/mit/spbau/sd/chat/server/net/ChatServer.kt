@@ -1,10 +1,9 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
-import ru.mit.spbau.sd.chat.server.ChatModel
-import ru.spbau.mit.sd.commons.proto.*
+import ru.spbau.mit.sd.commons.proto.ChatUserInfo
+import ru.spbau.mit.sd.commons.proto.UsersList
 import java.net.InetSocketAddress
-import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
@@ -18,7 +17,7 @@ import java.util.*
  */
 class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
     companion object {
-        val logger = LoggerFactory.getLogger(ChatServer::class.java.canonicalName)!!
+        val logger = LoggerFactory.getLogger(ChatServer::class.java)!!
     }
 
     /**
@@ -27,6 +26,7 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
      * It must be called at the very beginning of the work with server
      */
     fun setup()  {
+        logger.debug("Opening async. socket channel and setting up connection acceptor")
         serverSocket = AsynchronousServerSocketChannel.open()
         serverSocket!!.bind(null)
         setupAcceptor()
@@ -37,6 +37,7 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
      * close all connection's sockets and listening socket
      */
     fun destroy() {
+        logger.debug("Cancelling all connections...")
         if (serverSocket != null) {
             serverSocket!!.close()
         }

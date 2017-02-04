@@ -5,13 +5,13 @@ import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.User
 import ru.spbau.mit.sd.commons.proto.UsersList
 import java.net.InetSocketAddress
-import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Simple chat model implementation
+ * Chat model, which uses concurrent hash map for storing users
  */
-class SimpleChatModel : ChatModel<InetSocketAddress> {
-    private val usersMap = HashMap<InetSocketAddress, User>()
+class ConcurrentChatModel : ChatModel<InetSocketAddress> {
+    private val usersMap = ConcurrentHashMap<InetSocketAddress, User>()
 
     override fun getUsers(): UsersList {
         return UsersList.newBuilder()
