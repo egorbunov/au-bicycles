@@ -3,8 +3,8 @@ package ru.mit.spbau.sd.chat.commons.net
 import java.nio.ByteBuffer
 
 /**
- * This writing state represents state of the process of
- * writing many (possibly) ByteBuffers somewhere
+ * This writing state represents progress of writing many byte buffers somewhere.
+ *
  */
 class GatheringWriting(private val buffers: Array<ByteBuffer>) : WritingState {
     var currentBufIdx = 0
