@@ -30,8 +30,9 @@ fun <T> createStartReadingState(messageParser: (ByteArray) -> T): ReadingState<T
  * and message bytes itself
  */
 fun createStartWritingState(messageToWrite: ByteArray): WritingState {
-    val bufferToWrite = ByteBuffer.allocate(messageToWrite.size + intSizeInBytes())
-    bufferToWrite.putInt(messageToWrite.size)
-    bufferToWrite.put(bufferToWrite)
-    return GatheringWriting(arrayOf(bufferToWrite))
+    val bufToBeWritten = ByteBuffer.allocate(messageToWrite.size + intSizeInBytes())
+    bufToBeWritten.putInt(messageToWrite.size)
+    bufToBeWritten.put(messageToWrite)
+    bufToBeWritten.flip()
+    return GatheringWriting(arrayOf(bufToBeWritten))
 }
