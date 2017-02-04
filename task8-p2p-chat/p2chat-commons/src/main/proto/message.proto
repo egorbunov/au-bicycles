@@ -13,8 +13,13 @@ message ChatUserInfo {
     string name = 1;
 }
 
-message UsersInfo {
-    repeated ChatUserInfo infos = 1;
+message User {
+    ChatUserIpAddr id = 1;
+    ChatUserInfo info = 2;
+}
+
+message UsersList {
+    repeated User users = 1;
 }
 
 message ChatMessage {
@@ -45,7 +50,7 @@ message ServerToPeerMsg {
     Type msgType = 1;
 
     // this field is filled only in case of USERS_INFO_DATA msg type
-    UsersInfo usersInfo = 4;
+    UsersList users = 4;
 }
 
 message PeerToPeerMsg {

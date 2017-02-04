@@ -1,11 +1,8 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
-import ru.mit.spbau.sd.chat.server.ChatModelInterface
-import ru.spbau.mit.sd.commons.proto.ChatUserInfo
-import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
-import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
-import ru.spbau.mit.sd.commons.proto.UsersInfo
+import ru.mit.spbau.sd.chat.server.ChatModel
+import ru.spbau.mit.sd.commons.proto.*
 import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
@@ -79,20 +76,20 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
      * done with help of this anonymous event processor instance
      */
     private val peerEventProcessor = object: PeerMsgProcessor<OnePeerServer> {
-        private fun peerServerToStringId(peer: OnePeerServer): String {
-            return socketAddrToId(peer.channel.remoteAddress as InetSocketAddress)
+        private fun peerServerToId(peer: OnePeerServer): InetSocketAddress {
+            return peer.channel.remoteAddress as InetSocketAddress
         }
 
         override fun peerBecomeOnline(peer: OnePeerServer, userInfo: ChatUserInfo) {
-            modelPeerMsgProcessor.peerBecomeOnline(peerServerToStringId(peer), userInfo)
+            modelPeerMsgProcessor.peerBecomeOnline(peerServerToId(peer), userInfo)
         }
 
         override fun peerChangedInfo(peer: OnePeerServer, newInfo: ChatUserInfo) {
-            modelPeerMsgProcessor.peerChangedInfo(peerServerToStringId(peer), newInfo)
+            modelPeerMsgProcessor.peerChangedInfo(peerServerToId(peer), newInfo)
         }
 
         override fun peerDisconnected(peer: OnePeerServer) {
-            modelPeerMsgProcessor.peerDisconnected(peerServerToStringId(peer))
+            modelPeerMsgProcessor.peerDisconnected(peerServerToId(peer))
             // cancelling connection with peer
             peer.destroy()
             peers.remove(peer)
@@ -103,14 +100,14 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
          * have disconnected
          */
         override fun peerGoneOffline(peer: OnePeerServer) {
-            modelPeerMsgProcessor.peerGoneOffline(peerServerToStringId(peer))
+            modelPeerMsgProcessor.peerGoneOffline(peerServerToId(peer))
         }
 
         /**
          * Method, which creates response payload for peer request
          * to get all current chat users
          */
-        override fun usersRequested(): UsersInfo {
+        override fun usersRequested(): UsersList {
             return modelPeerMsgProcessor.usersRequested()
         }
 

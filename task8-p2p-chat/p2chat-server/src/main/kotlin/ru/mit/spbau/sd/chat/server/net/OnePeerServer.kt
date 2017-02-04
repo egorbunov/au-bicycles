@@ -105,7 +105,7 @@ internal class OnePeerServer(val channel: AsynchronousSocketChannel,
                 val availableUsers = msgProcessor.usersRequested()
                 val usersMessage = ServerToPeerMsg.newBuilder()
                         .setMsgType(ServerToPeerMsg.Type.AVAILABLE_USERS)
-                        .setUsersInfo(availableUsers)
+                        .setUsers(availableUsers)
                         .build()!!
                 sendMessage(usersMessage)
             }

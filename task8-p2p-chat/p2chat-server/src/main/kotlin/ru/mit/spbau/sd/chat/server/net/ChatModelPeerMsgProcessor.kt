@@ -1,30 +1,32 @@
 package ru.mit.spbau.sd.chat.server.net
 
-import ru.mit.spbau.sd.chat.server.ChatModelInterface
+import ru.mit.spbau.sd.chat.server.ChatModel
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
-import ru.spbau.mit.sd.commons.proto.UsersInfo
+import ru.spbau.mit.sd.commons.proto.UsersList
+import java.net.InetSocketAddress
 
 /**
  * Simple peer message processor, which delegates all events to
  * chat model
  */
-class ChatModelPeerMsgProcessor(private val chatModel: ChatModelInterface) : PeerMsgProcessor<String> {
-    override fun peerBecomeOnline(peer: String, userInfo: ChatUserInfo) {
+class ChatModelPeerMsgProcessor(private val chatModel: ChatModel<InetSocketAddress>)
+    : PeerMsgProcessor<InetSocketAddress> {
+    override fun peerBecomeOnline(peer: InetSocketAddress, userInfo: ChatUserInfo) {
         chatModel.addUser(peer, userInfo)
     }
 
-    override fun peerGoneOffline(peer: String) {
+    override fun peerGoneOffline(peer: InetSocketAddress) {
         chatModel.removeUser(peer)
     }
 
-    override fun peerChangedInfo(peer: String, newInfo: ChatUserInfo) {
+    override fun peerChangedInfo(peer: InetSocketAddress, newInfo: ChatUserInfo) {
         chatModel.editUser(peer, newInfo)
     }
 
-    override fun usersRequested(): UsersInfo {
+    override fun usersRequested(): UsersList {
         return chatModel.getUsers()
     }
 
-    override fun peerDisconnected(peer: String) {
+    override fun peerDisconnected(peer: InetSocketAddress) {
     }
 }
