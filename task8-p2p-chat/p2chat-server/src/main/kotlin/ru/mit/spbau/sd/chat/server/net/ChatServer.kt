@@ -5,6 +5,7 @@ import ru.mit.spbau.sd.chat.server.ChatModelInterface
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
+import ru.spbau.mit.sd.commons.proto.UsersInfo
 import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
@@ -15,10 +16,10 @@ import java.util.*
 /**
  * Asynchronous server, which accepts connections from chat users
  *
- * @param chatModel - data, which is held by chat server, this data will
- *        be changed during busy server life
+ * @param modelPeerMsgProcessor - peer message processor, which does some
+ *        useful job with messages from clients
  */
-class ChatServer(val chatModel: ChatModelInterface) {
+class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
     companion object {
         val logger = LoggerFactory.getLogger(ChatServer::class.java.canonicalName)!!
     }
@@ -77,76 +78,40 @@ class ChatServer(val chatModel: ChatModelInterface) {
      * on this messages whole server should react somehow, so this is
      * done with help of this anonymous event processor instance
      */
-    private val peerEventProcessor = object: PeerEventProcessor {
-        override fun startChatting(peerAddress: SocketAddress, userInfo: ChatUserInfo) {
-            chatModel.addUser(
-                    socketAddrToId(peerAddress as InetSocketAddress),
-                    userInfo
-            )
+    private val peerEventProcessor = object: PeerMsgProcessor<OnePeerServer> {
+        private fun peerServerToStringId(peer: OnePeerServer): String {
+            return socketAddrToId(peer.channel.remoteAddress as InetSocketAddress)
         }
 
-        /**
-         * Sends message with new info for changed peer.
-         * Message is sent to each peer, except one, which made the change.
-         */
-        override fun peerChangedInfo(peerAddress: SocketAddress, newInfo: ChatUserInfo) {
-            val remotePeerAddress = peerAddress as InetSocketAddress
-            val peerId = socketAddrToId(remotePeerAddress)
-            chatModel.editUser(peerId, newInfo)
+        override fun peerBecomeOnline(peer: OnePeerServer, userInfo: ChatUserInfo) {
+            modelPeerMsgProcessor.peerBecomeOnline(peerServerToStringId(peer), userInfo)
+        }
 
-            // constructing client info change message
-            val message = ServerToPeerMsg.newBuilder()
-                    .setMsgType(ServerToPeerMsg.Type.PEER_CHANGED_NAME)
-                    .setPeerAddr(
-                            ChatUserIpAddr.newBuilder()
-                                    .setIp(remotePeerAddress.address.hostAddress)
-                                    .setPort(remotePeerAddress.port)
-                    )
-                    .setPeerInfo(newInfo)
-                    .build()
+        override fun peerChangedInfo(peer: OnePeerServer, newInfo: ChatUserInfo) {
+            modelPeerMsgProcessor.peerChangedInfo(peerServerToStringId(peer), newInfo)
+        }
 
-            peers
-                    .filter { it.channel.remoteAddress != peerAddress }
-                    .forEach { it.sendMessage(message) }
-
+        override fun peerDisconnected(peer: OnePeerServer) {
+            modelPeerMsgProcessor.peerDisconnected(peerServerToStringId(peer))
+            // cancelling connection with peer
+            peer.destroy()
+            peers.remove(peer)
         }
 
         /**
          * Sends message to each peer designating, that one of chat members
          * have disconnected
          */
-        override fun disconnectPeer(peer: OnePeerServer) {
-            val remotePeerAddress = peer.channel.remoteAddress as InetSocketAddress
-            val peerId = socketAddrToId(remotePeerAddress)
-            chatModel.removeUser(peerId)
-            if (!peers.remove(peer)) {
-                throw IllegalStateException("Can't remove given peer, it does not exist")
-            }
-
-            // constructing disconnect message
-            val message = ServerToPeerMsg.newBuilder()
-                    .setMsgType(ServerToPeerMsg.Type.PEER_DISCONNECTED)
-                    .setPeerAddr(
-                            ChatUserIpAddr.newBuilder()
-                                    .setIp(remotePeerAddress.address.hostAddress)
-                                    .setPort(remotePeerAddress.port)
-                    )
-                    .build()
-
-            peers.forEach { it.sendMessage(message) }
+        override fun peerGoneOffline(peer: OnePeerServer) {
+            modelPeerMsgProcessor.peerGoneOffline(peerServerToStringId(peer))
         }
 
         /**
          * Method, which creates response payload for peer request
          * to get all current chat users
          */
-        override fun usersRequested(peer: OnePeerServer) {
-            val users = chatModel.getUsers()
-            val responseMessage = ServerToPeerMsg.newBuilder()
-                    .setMsgType(ServerToPeerMsg.Type.USERS_INFO_DATA)
-                    .setUsersInfo(users)
-                    .build()
-            peer.sendMessage(responseMessage)
+        override fun usersRequested(): UsersInfo {
+            return modelPeerMsgProcessor.usersRequested()
         }
 
     }

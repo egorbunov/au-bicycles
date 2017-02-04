@@ -19,14 +19,14 @@ import java.nio.channels.CompletionHandler
  * is done `destroy()` call is expected for proper resource release.
  *
  * Every such one peer server has it's owner for proper resource release
- * handling: it is assumed, that eventProcessor knows how to correctly handle
+ * handling: it is assumed, that msgProcessor knows how to correctly handle
  * server destruction (i.e. connection close). That is needed because
  * one peer connection may be closed either by getting "disconnect" signal
  * from other side of connection, or due to manual (by user) connection
  * accepting server destruction, so...
  */
 internal class OnePeerServer(val channel: AsynchronousSocketChannel,
-                             val eventProcessor: PeerEventProcessor) {
+                             val msgProcessor: PeerMsgProcessor<OnePeerServer>) {
 
     companion object {
         val logger = LoggerFactory.getLogger(OnePeerServer::class.java.simpleName)!!
@@ -97,16 +97,22 @@ internal class OnePeerServer(val channel: AsynchronousSocketChannel,
 
     private fun dispatchMessage(message: PeerToServerMsg) {
         when (message.msgType!!) {
-            PeerToServerMsg.Type.START_CHATING -> eventProcessor.startChatting(
-                    channel.remoteAddress!!,
-                    message.userInfo!!
-            )
-            PeerToServerMsg.Type.DISCONNECT -> eventProcessor.disconnectPeer(this)
-            PeerToServerMsg.Type.GET_USERS -> eventProcessor.usersRequested(this)
-            PeerToServerMsg.Type.CHANGE_INFO -> eventProcessor.peerChangedInfo(
-                    channel.remoteAddress!!,
-                    message.userInfo!!
-            )
+            PeerToServerMsg.Type.PEER_ONLINE ->
+                msgProcessor.peerBecomeOnline(this, message.userInfo!!)
+            PeerToServerMsg.Type.DISCONNECT ->
+                msgProcessor.peerDisconnected(this)
+            PeerToServerMsg.Type.GET_AVAILABLE_USERS -> {
+                val availableUsers = msgProcessor.usersRequested()
+                val usersMessage = ServerToPeerMsg.newBuilder()
+                        .setMsgType(ServerToPeerMsg.Type.AVAILABLE_USERS)
+                        .setUsersInfo(availableUsers)
+                        .build()!!
+                sendMessage(usersMessage)
+            }
+            PeerToServerMsg.Type.MY_INFO_CHANGED ->
+                msgProcessor.peerChangedInfo(this, message.userInfo!!)
+            PeerToServerMsg.Type.PEER_GONE_OFFLINE ->
+                msgProcessor.peerGoneOffline(this)
             PeerToServerMsg.Type.UNRECOGNIZED -> {
                 logger.error("Bad [peer->server] message type!")
             }
