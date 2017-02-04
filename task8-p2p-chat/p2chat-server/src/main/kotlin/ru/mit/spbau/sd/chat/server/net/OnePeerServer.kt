@@ -75,6 +75,7 @@ internal class OnePeerServer(val channel: AsynchronousSocketChannel,
         if (writingState !is NothingToWrite) {
             throw IllegalStateException("Bad writing state of peer connection on write")
         }
+        logger.debug("Sending message to peer: $msg")
         // initializing new writing state with appropriate buffer
         writingState = createStartWritingState(msg.toByteArray())
         channel.write(writingState.getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
