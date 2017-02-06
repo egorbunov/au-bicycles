@@ -1,5 +1,6 @@
-package ru.mit.spbau.sd.chat.server
+package ru.mit.spbau.sd.chat.commons
 
+import ru.mit.spbau.sd.chat.commons.UsersMap
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.User
@@ -8,9 +9,9 @@ import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Chat model, which uses concurrent hash map for storing users
+ * Users map, which uses concurrent hash map for storing users
  */
-class ConcurrentChatModel : ChatModel<InetSocketAddress> {
+class ConcurrentUsersMap : UsersMap<InetSocketAddress> {
     private val usersMap = ConcurrentHashMap<InetSocketAddress, User>()
 
     override fun getUsers(): UsersList {

@@ -1,8 +1,8 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
-import ru.mit.spbau.sd.chat.commons.createStartReadingState
-import ru.mit.spbau.sd.chat.commons.createStartWritingState
+import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
+import ru.mit.spbau.sd.chat.commons.net.createStartWritingState
 import ru.mit.spbau.sd.chat.commons.net.MessageRead
 import ru.mit.spbau.sd.chat.commons.net.NothingToWrite
 import ru.mit.spbau.sd.chat.commons.net.ReadingState

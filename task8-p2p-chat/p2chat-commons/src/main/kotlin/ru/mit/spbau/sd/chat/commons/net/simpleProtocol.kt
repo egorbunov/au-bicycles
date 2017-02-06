@@ -1,5 +1,6 @@
-package ru.mit.spbau.sd.chat.commons
+package ru.mit.spbau.sd.chat.commons.net
 
+import ru.mit.spbau.sd.chat.commons.intSizeInBytes
 import ru.mit.spbau.sd.chat.commons.net.*
 import java.nio.ByteBuffer
 

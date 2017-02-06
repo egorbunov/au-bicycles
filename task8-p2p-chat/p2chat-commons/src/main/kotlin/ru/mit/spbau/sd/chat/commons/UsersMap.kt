@@ -1,12 +1,12 @@
-package ru.mit.spbau.sd.chat.server
+package ru.mit.spbau.sd.chat.commons
 
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.UsersList
 
 /**
- * Interface to server-side chat data
+ * Users map
  */
-interface ChatModel<in T> {
+interface UsersMap<in T> {
     /**
      * Returns available users
      */

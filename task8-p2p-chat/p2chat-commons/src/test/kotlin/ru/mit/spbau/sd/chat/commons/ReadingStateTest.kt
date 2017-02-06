@@ -5,6 +5,7 @@ import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.net.ChainedReading
 import ru.mit.spbau.sd.chat.commons.net.MessageRead
 import ru.mit.spbau.sd.chat.commons.net.ReadingState
+import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
 import java.nio.ByteBuffer
 
 

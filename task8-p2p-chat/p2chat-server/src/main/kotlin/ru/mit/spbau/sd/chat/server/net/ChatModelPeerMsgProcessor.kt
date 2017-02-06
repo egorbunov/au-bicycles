@@ -1,6 +1,6 @@
 package ru.mit.spbau.sd.chat.server.net
 
-import ru.mit.spbau.sd.chat.server.ChatModel
+import ru.mit.spbau.sd.chat.commons.UsersMap
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.UsersList
 import java.net.InetSocketAddress
@@ -9,7 +9,7 @@ import java.net.InetSocketAddress
  * Simple peer message processor, which delegates all events to
  * chat model
  */
-class ChatModelPeerMsgProcessor(private val chatModel: ChatModel<InetSocketAddress>)
+class ChatModelPeerMsgProcessor(private val chatModel: UsersMap<InetSocketAddress>)
     : PeerMsgProcessor<InetSocketAddress> {
     override fun peerBecomeOnline(peer: InetSocketAddress, userInfo: ChatUserInfo) {
         chatModel.addUser(peer, userInfo)

@@ -57,7 +57,7 @@ message PeerToPeerMsg {
     enum Type {
         TEXT_MESSAGE = 0;
         MY_INFO_CHANGED = 1;
-
+        I_GO_OFFLINE = 2;
     }
     ChatMessage message = 2;
 }

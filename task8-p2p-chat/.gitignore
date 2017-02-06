@@ -4,3 +4,6 @@ target/
 build/
 out/
 log/
+*.lck
+*.vux
+*.bak*
