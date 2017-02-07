@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.commons.listToUsersList
 import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
 import ru.mit.spbau.sd.chat.commons.net.createStartWritingState
 import ru.mit.spbau.sd.chat.commons.net.MessageRead
@@ -105,7 +106,7 @@ internal class OnePeerServer(val channel: AsynchronousSocketChannel,
             PeerToServerMsg.Type.DISCONNECT ->
                 disconnectListener.peerDisconnected(this)
             PeerToServerMsg.Type.GET_AVAILABLE_USERS -> {
-                val availableUsers = msgProcessor.usersRequested()
+                val availableUsers = listToUsersList(msgProcessor.usersRequested())
                 val usersMessage = ServerToPeerMsg.newBuilder()
                         .setMsgType(ServerToPeerMsg.Type.AVAILABLE_USERS)
                         .setUsers(availableUsers)

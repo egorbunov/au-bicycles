@@ -1,29 +1,32 @@
 package ru.mit.spbau.sd.chat.server.net
 
-import ru.mit.spbau.sd.chat.commons.UsersMap
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
-import ru.spbau.mit.sd.commons.proto.UsersList
 import java.net.InetSocketAddress
+import java.util.*
 
 /**
  * Simple peer message processor, which delegates all events to
  * chat model
  */
-class ChatModelPeerMsgProcessor(private val chatModel: UsersMap<InetSocketAddress>)
+class ChatModelPeerMsgProcessor(private val usersMap: AbstractMap<InetSocketAddress, ChatUserInfo>)
     : PeerMsgListener<InetSocketAddress> {
     override fun peerBecomeOnline(userId: InetSocketAddress, userInfo: ChatUserInfo) {
-        chatModel.addUser(userId, userInfo)
+        if (userId in usersMap) {
+            throw IllegalStateException("User already online")
+        }
+        usersMap[userId] = userInfo
     }
 
     override fun peerGoneOffline(userId: InetSocketAddress) {
-        chatModel.removeUser(userId)
+        if (userId !in usersMap)
+        usersMap.remove(userId)
     }
 
     override fun peerChangedInfo(userId: InetSocketAddress, newInfo: ChatUserInfo) {
-        chatModel.editUser(userId, newInfo)
+        usersMap[userId] = newInfo
     }
 
-    override fun usersRequested(): UsersList {
-        return chatModel.getUsers()
+    override fun usersRequested(): List<Pair<InetSocketAddress, ChatUserInfo>> {
+        return usersMap.toList()
     }
 }

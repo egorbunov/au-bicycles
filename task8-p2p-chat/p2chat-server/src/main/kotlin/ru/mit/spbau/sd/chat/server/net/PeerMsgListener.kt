@@ -6,9 +6,9 @@ import ru.spbau.mit.sd.commons.proto.UsersList
 /**
  *
  */
-internal interface PeerMsgListener<in T> {
+internal interface PeerMsgListener<T> {
     fun peerBecomeOnline(userId: T, userInfo: ChatUserInfo)
     fun peerGoneOffline(userId: T)
     fun peerChangedInfo(userId: T, newInfo: ChatUserInfo)
-    fun usersRequested(): UsersList
+    fun usersRequested(): List<Pair<T, ChatUserInfo>>
 }

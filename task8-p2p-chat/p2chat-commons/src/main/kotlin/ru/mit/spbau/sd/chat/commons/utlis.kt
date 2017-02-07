@@ -1,5 +1,11 @@
 package ru.mit.spbau.sd.chat.commons
 
+import ru.spbau.mit.sd.commons.proto.ChatUserInfo
+import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
+import ru.spbau.mit.sd.commons.proto.User
+import ru.spbau.mit.sd.commons.proto.UsersList
+import java.net.InetSocketAddress
+
 /**
  * Created by: Egor Gorbunov
  * Date: 2/3/17
@@ -8,4 +14,23 @@ package ru.mit.spbau.sd.chat.commons
 
 fun intSizeInBytes(): Int {
     return 4
+}
+
+fun inetSockAddrToUserIp(addr: InetSocketAddress): ChatUserIpAddr {
+    return ChatUserIpAddr.newBuilder()
+            .setIp(addr.address.hostAddress!!)
+            .setPort(addr.port)
+            .build()!!
+}
+
+fun listToUsersList(list: List<Pair<ChatUserIpAddr, ChatUserInfo>>): UsersList {
+    return UsersList.newBuilder()
+            .addAllUsers(
+            list.map { p ->
+                User.newBuilder()
+                        .setId(p.first)
+                        .setInfo(p.second)
+                        .build()!!
+            })
+            .build()!!
 }

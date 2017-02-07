@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.commons.inetSockAddrToUserIp
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.UsersList
@@ -102,8 +103,14 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
          * Method, which creates response payload for peer request
          * to get all current chat users
          */
-        override fun usersRequested(): UsersList {
-            return modelPeerMsgProcessor.usersRequested()
+        override fun usersRequested(): List<Pair<ChatUserIpAddr, ChatUserInfo>> {
+            val users = modelPeerMsgProcessor.usersRequested()
+            return users.map { p ->
+                Pair(
+                        inetSockAddrToUserIp(p.first),
+                        p.second
+                )
+            }
         }
     }
 
