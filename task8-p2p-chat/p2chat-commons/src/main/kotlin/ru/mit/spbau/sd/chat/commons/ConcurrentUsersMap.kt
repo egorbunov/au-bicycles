@@ -1,6 +1,5 @@
 package ru.mit.spbau.sd.chat.commons
 
-import ru.mit.spbau.sd.chat.commons.UsersMap
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.User

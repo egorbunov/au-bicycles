@@ -14,7 +14,8 @@ message ChatUserInfo {
 }
 
 message User {
-    ChatUserIpAddr id = 1;
+    ChatUserIpAddr id = 1; // that is ip address, which shoul be used to connect to that user
+                           // by other peers
     ChatUserInfo info = 2;
 }
 
@@ -38,8 +39,8 @@ message PeerToServerMsg {
     }
 
     Type msgType = 1;
-    ChatUserInfo userInfo = 2; // that is optional name, which will be passed in case of
-                               // START_CHATTING and CHANGE_INFO
+    ChatUserIpAddr userId = 2;
+    ChatUserInfo userInfo = 3;
 }
 
 message ServerToPeerMsg {
@@ -57,7 +58,12 @@ message PeerToPeerMsg {
     enum Type {
         TEXT_MESSAGE = 0;
         MY_INFO_CHANGED = 1;
-        I_GO_OFFLINE = 2;
+        I_AM_ONLINE = 2;
+        I_AM_GONE_OFFLINE = 3;
+        DISCONNECT = 4;
     }
-    ChatMessage message = 2;
+    ChatMessage message = 1;
+    ChatUserIpAddr userFromId = 2;
+    ChatUserInfo userInfo = 3;
+
 }

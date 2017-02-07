@@ -2,7 +2,9 @@ package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
+import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.UsersList
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
@@ -56,15 +58,14 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
 
             override fun completed(result: AsynchronousSocketChannel?, attachment: Nothing?) {
                 logger.info("Accepted connection from peer: ${result!!.remoteAddress}")
-                val newPeerServer = OnePeerServer(result, peerEventProcessor)
+                val newPeerServer = OnePeerServer(
+                        result, peerEventProcessor, peerDisconnectListener
+                )
                 newPeerServer.start()
-
                 peers.add(newPeerServer)
-
                 // subscribe on accept again
                 serverSocket!!.accept(null, this)
             }
-
         })
     }
 
@@ -76,32 +77,25 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
      * on this messages whole server should react somehow, so this is
      * done with help of this anonymous event processor instance
      */
-    private val peerEventProcessor = object: PeerMsgProcessor<OnePeerServer> {
-        private fun peerServerToId(peer: OnePeerServer): InetSocketAddress {
-            return peer.channel.remoteAddress as InetSocketAddress
+    private val peerEventProcessor = object: PeerMsgListener<ChatUserIpAddr> {
+        private fun chatUserIpAddrToSockAddr(ip: ChatUserIpAddr): InetSocketAddress {
+            return InetSocketAddress(InetAddress.getByName(ip.ip), ip.port)
         }
 
-        override fun peerBecomeOnline(peer: OnePeerServer, userInfo: ChatUserInfo) {
-            modelPeerMsgProcessor.peerBecomeOnline(peerServerToId(peer), userInfo)
+        override fun peerBecomeOnline(userId: ChatUserIpAddr, userInfo: ChatUserInfo) {
+            modelPeerMsgProcessor.peerBecomeOnline(chatUserIpAddrToSockAddr(userId), userInfo)
         }
 
-        override fun peerChangedInfo(peer: OnePeerServer, newInfo: ChatUserInfo) {
-            modelPeerMsgProcessor.peerChangedInfo(peerServerToId(peer), newInfo)
-        }
-
-        override fun peerDisconnected(peer: OnePeerServer) {
-            modelPeerMsgProcessor.peerDisconnected(peerServerToId(peer))
-            // cancelling connection with peer
-            peer.destroy()
-            peers.remove(peer)
+        override fun peerChangedInfo(userId: ChatUserIpAddr, newInfo: ChatUserInfo) {
+            modelPeerMsgProcessor.peerChangedInfo(chatUserIpAddrToSockAddr(userId), newInfo)
         }
 
         /**
-         * Sends message to each peer designating, that one of chat members
+         * Sends message to each userId designating, that one of chat members
          * have disconnected
          */
-        override fun peerGoneOffline(peer: OnePeerServer) {
-            modelPeerMsgProcessor.peerGoneOffline(peerServerToId(peer))
+        override fun peerGoneOffline(userId: ChatUserIpAddr) {
+            modelPeerMsgProcessor.peerGoneOffline(chatUserIpAddrToSockAddr(userId))
         }
 
         /**
@@ -111,6 +105,16 @@ class ChatServer(private val modelPeerMsgProcessor: ChatModelPeerMsgProcessor) {
         override fun usersRequested(): UsersList {
             return modelPeerMsgProcessor.usersRequested()
         }
+    }
 
+    /**
+     * End of peer-server session listener; It is used just for deleting and destroying
+     * connection.
+     */
+    private val peerDisconnectListener = object: PeerDisconnectListener<OnePeerServer> {
+        override fun peerDisconnected(peer: OnePeerServer) {
+            peer.destroy()
+            peers.remove(peer)
+        }
     }
 }

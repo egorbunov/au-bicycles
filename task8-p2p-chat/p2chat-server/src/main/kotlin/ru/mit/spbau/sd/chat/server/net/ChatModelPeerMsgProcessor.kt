@@ -10,23 +10,20 @@ import java.net.InetSocketAddress
  * chat model
  */
 class ChatModelPeerMsgProcessor(private val chatModel: UsersMap<InetSocketAddress>)
-    : PeerMsgProcessor<InetSocketAddress> {
-    override fun peerBecomeOnline(peer: InetSocketAddress, userInfo: ChatUserInfo) {
-        chatModel.addUser(peer, userInfo)
+    : PeerMsgListener<InetSocketAddress> {
+    override fun peerBecomeOnline(userId: InetSocketAddress, userInfo: ChatUserInfo) {
+        chatModel.addUser(userId, userInfo)
     }
 
-    override fun peerGoneOffline(peer: InetSocketAddress) {
-        chatModel.removeUser(peer)
+    override fun peerGoneOffline(userId: InetSocketAddress) {
+        chatModel.removeUser(userId)
     }
 
-    override fun peerChangedInfo(peer: InetSocketAddress, newInfo: ChatUserInfo) {
-        chatModel.editUser(peer, newInfo)
+    override fun peerChangedInfo(userId: InetSocketAddress, newInfo: ChatUserInfo) {
+        chatModel.editUser(userId, newInfo)
     }
 
     override fun usersRequested(): UsersList {
         return chatModel.getUsers()
-    }
-
-    override fun peerDisconnected(peer: InetSocketAddress) {
     }
 }
