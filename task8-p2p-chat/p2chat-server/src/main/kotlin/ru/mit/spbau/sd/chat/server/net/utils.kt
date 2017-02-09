@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
+import java.net.InetAddress
 import java.net.InetSocketAddress
 
 /**
@@ -15,4 +16,8 @@ fun socketAddrToId(address: InetSocketAddress): String {
 
 fun ipMessageToAddr(userId: ChatUserIpAddr): InetSocketAddress {
     return InetSocketAddress(userId.ip, userId.port)
+}
+
+fun chatUserIpAddrToSockAddr(ip: ChatUserIpAddr): InetSocketAddress {
+    return InetSocketAddress(InetAddress.getByName(ip.ip), ip.port)
 }
