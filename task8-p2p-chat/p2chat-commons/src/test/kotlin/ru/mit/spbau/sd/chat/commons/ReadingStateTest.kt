@@ -5,7 +5,6 @@ import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.net.state.ChainedReading
 import ru.mit.spbau.sd.chat.commons.net.state.MessageRead
 import ru.mit.spbau.sd.chat.commons.net.state.ReadingState
-import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
 import java.nio.ByteBuffer
 
 
@@ -32,25 +31,6 @@ class ReadingStateTest {
         Assert.assertTrue(readingState is MessageRead)
         with(readingState as MessageRead<String>) {
             Assert.assertEquals(targetStr, readingState.getMessage())
-        }
-    }
-
-    @Test
-    fun simpleProtocolTest() {
-        var readingState = createStartReadingState { bytes ->
-            String(bytes)
-        }
-
-        val strToWrite = "alphabet"
-        val bytes = strToWrite.toByteArray()
-
-        readingState.getBuffer().putInt(bytes.size)
-        readingState = readingState.proceed()
-        readingState.getBuffer().put(bytes)
-        readingState = readingState.proceed()
-
-        with(readingState as MessageRead<String>) {
-            Assert.assertEquals(strToWrite, readingState.getMessage())
         }
     }
 }

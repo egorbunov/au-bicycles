@@ -4,7 +4,6 @@ import org.junit.Assert
 import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.net.state.GatheringWriting
 import ru.mit.spbau.sd.chat.commons.net.state.WritingState
-import ru.mit.spbau.sd.chat.commons.net.createStartWritingState
 import java.nio.ByteBuffer
 
 
@@ -27,21 +26,6 @@ class WritingStateTest {
             val actual = writeState.getBuffer().get()
             Assert.assertEquals(byte, actual)
             writeState = writeState.proceed()
-        }
-    }
-
-    @Test
-    fun testSimpleProtocolWritingState() {
-        val bytes = "hello".toByteArray()
-        var state = createStartWritingState(bytes)
-
-        val actualMsgSize = state.getBuffer().getInt()
-        state = state.proceed()
-        Assert.assertEquals(bytes.size, actualMsgSize)
-        bytes.forEach { byte ->
-            val actualByte = state.getBuffer().get()
-            Assert.assertEquals(byte, actualByte)
-            state = state.proceed()
         }
     }
 }

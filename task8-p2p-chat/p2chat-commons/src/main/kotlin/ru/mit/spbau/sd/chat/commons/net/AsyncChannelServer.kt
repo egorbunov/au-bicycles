@@ -53,11 +53,11 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
 
     private var readingState = createReadingState()
 
+    private val nothingToWriteState = NothingToWrite()
     /**
      * See notes on atomicity of this field in comments inside `writeMessage` method
      */
-    private val writingState: AtomicReference<WritingState> = AtomicReference(NothingToWrite())
-    private val nothingToWriteState = NothingToWrite()
+    private val writingState: AtomicReference<WritingState> = AtomicReference(nothingToWriteState)
 
     /**
      * Queue of pending writings. It is blocking for the same reasons
@@ -73,12 +73,12 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
     fun start() {
         channel.read(readingState.getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
             override fun completed(result: Int?, attachment: Nothing?) {
-                logger.debug("Async read competing thread: ${Thread::currentThread.name}")
+                logger.debug("Completing async read...")
 
                 readingState = readingState.proceed()
                 if (readingState is MessageRead<T>) {
                     val message = readingState.getMessage()
-                    logger.debug("Got message from peer: $message")
+                    logger.debug("Got message from channel: $message")
                     messageListener.messageReceived(message, this@AsyncChannelServer)
                     // renewing reading state, so server is again available
                     // for new incoming messages
@@ -122,7 +122,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
                 writingState.set(createWritingState(msg))
                 channel.write(writingState.get().getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
                     override fun completed(result: Int?, attachment: Nothing?) {
-                        logger.debug("Async write competing thread: ${Thread::currentThread.name}")
+                        logger.debug("Completing async write...")
 
                         // This write to `writingState` is not covered by synchronized section,
                         // so no happens-before rules apply in case writingState is not volatile or something,
@@ -149,6 +149,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
                     }
                 })
             } else {
+                logger.debug("Messages in write queue: ${writingStatesQueue.size}")
                 writingStatesQueue.add(createWritingState(msg))
             }
         }

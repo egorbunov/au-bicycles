@@ -6,6 +6,8 @@ import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 
 // TODO: think about error listener
 
@@ -48,6 +50,11 @@ class AsyncConnectionAcceptor(val port: Int,
     fun destroy() {
         serverSocket.close()
     }
+
+    /**
+     * Returns server local address
+     */
+    fun getAddress(): SocketAddress = serverSocket.localAddress!!
 }
 
 /**
@@ -62,6 +69,7 @@ fun asyncConnect(address: SocketAddress, connectionListener: AsyncConnectionList
     val connection = AsynchronousSocketChannel.open()
     connection.connect(address, null, object: CompletionHandler<Void, Nothing?> {
         override fun completed(result: Void?, attachment: Nothing?) {
+            logger.debug("Connection wit $address established successfully")
             connectionListener.connectionEstablished(connection)
         }
 
@@ -69,4 +77,28 @@ fun asyncConnect(address: SocketAddress, connectionListener: AsyncConnectionList
             logger.error("Async. connect failed, dest: $address")
         }
     })
+}
+
+/**
+ * Same as above, but returning future
+ */
+fun asyncConnect(address: SocketAddress): Future<AsynchronousSocketChannel> {
+    val connection = AsynchronousSocketChannel.open()
+    val future = connection.connect(address)
+    return object: Future<AsynchronousSocketChannel> {
+        override fun cancel(mayInterruptIfRunning: Boolean): Boolean {
+            return future.cancel(mayInterruptIfRunning)
+        }
+        override fun get(): AsynchronousSocketChannel {
+            future.get()
+            return connection
+        }
+        override fun get(timeout: Long, unit: TimeUnit): AsynchronousSocketChannel {
+            future.get(timeout, unit)
+            return connection
+        }
+        override fun isCancelled() = future.isCancelled
+        override fun isDone() = future.isDone
+
+    }
 }
