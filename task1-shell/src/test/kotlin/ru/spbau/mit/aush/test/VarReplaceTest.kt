@@ -14,8 +14,8 @@ import java.util.*
 class VarReplaceTest(val str: String,
                      val expectedStatement: Statement) {
     val parser = AushParser()
-    val context = AushContext()
-    val replacer = VarReplacingVisitor(context)
+    val context = AushContext.instance
+    val replacer = VarReplacingVisitor()
 
     init {
         context.addVar("X", "hello")
@@ -43,7 +43,7 @@ class VarReplaceTest(val str: String,
     }
 
     @Test fun testReplace() {
-        val statement = parser.parse(str)!!
+        val statement = parser.parse(str)
         val actualReplaceStatement = replacer.replace(statement)
         Assert.assertEquals(expectedStatement, actualReplaceStatement)
     }

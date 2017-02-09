@@ -8,7 +8,7 @@ import ru.spbau.mit.aush.util.isSingleQuoted
 import java.util.*
 
 
-class VarReplacingVisitor(val context: AushContext) : StatementVisitor {
+class VarReplacingVisitor() : StatementVisitor {
     val statementStack = LinkedList<Statement>()
 
     fun replace(statement: Statement): Statement {
@@ -37,9 +37,9 @@ class VarReplacingVisitor(val context: AushContext) : StatementVisitor {
     }
 
     private fun replaceVars(str: String): String {
-        val replaceNoBrace = context.getVars().fold(str,
+        val replaceNoBrace = AushContext.instance.getVars().fold(str,
                 {s, p -> s.replace("$${p.first}", p.second)})
-        val replaceInBrace = context.getVars().fold(replaceNoBrace,
+        val replaceInBrace = AushContext.instance.getVars().fold(replaceNoBrace,
                 {s, p -> s.replace("\${${p.first}}", p.second)})
         return replaceInBrace
     }

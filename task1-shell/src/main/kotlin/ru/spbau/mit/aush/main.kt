@@ -13,8 +13,7 @@ import ru.spbau.mit.aush.parse.error.TokenErr
 fun main(args: Array<String>) {
     val logger = Logging.getLogger("Main")
     val pareser = AushParser()
-    val context = AushContext()
-    val interpreter = AushInterpreter(context)
+    val interpreter = AushInterpreter()
     val replReader = System.`in`.bufferedReader()
     while (true) {
         print("aush >> ")

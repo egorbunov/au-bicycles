@@ -7,9 +7,20 @@ import java.util.*
  *    - environment variables
  *    - last executed command exit code
  */
-class AushContext {
+class AushContext private constructor() {
     private val vars = HashMap<String, String>()
     private var lastExitCode: Int = 0
+
+    init {
+        addVar(SpecialVars.PATH.name, System.getenv("PATH"))
+        addVar(SpecialVars.PWD.name, System.getenv("PWD"))
+    }
+
+    private object instanceHolder { val instance = AushContext() }
+
+    companion object {
+        val instance: AushContext by lazy { instanceHolder.instance }
+    }
 
     /**
      * Add new variable binding.
@@ -17,6 +28,7 @@ class AushContext {
      */
     fun addVar(name: String, value: String) {
         vars.put(name, value)
+        System.setProperty(name, value)
     }
 
     /**

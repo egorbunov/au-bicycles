@@ -1,5 +1,7 @@
 package ru.spbau.mit.aush.execute.cmd
 
+import ru.spbau.mit.aush.execute.AushContext
+import ru.spbau.mit.aush.execute.SpecialVars
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -13,7 +15,7 @@ class PWDExecutor : CmdExecutor() {
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         val writer = outStream.bufferedWriter()
-        writer.write(System.getProperty("user.dir"))
+        writer.write(AushContext.instance.getVar(SpecialVars.PWD.name))
         writer.newLine()
         writer.flush()
         return 0

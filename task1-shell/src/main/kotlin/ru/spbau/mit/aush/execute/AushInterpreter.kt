@@ -5,6 +5,7 @@ import org.reflections.Reflections
 import org.reflections.scanners.SubTypesScanner
 import org.reflections.util.ClasspathHelper
 import org.reflections.util.ConfigurationBuilder
+import ru.spbau.mit.aush.execute.cmd.CdExecutor
 import ru.spbau.mit.aush.execute.cmd.CmdExecutor
 import ru.spbau.mit.aush.execute.cmd.ExitExecutor
 import ru.spbau.mit.aush.execute.error.CmdExecutionError
@@ -25,15 +26,13 @@ import java.io.IOException
  * close whole interpreter builtin commands use EOF string as signal to stop
  *
  */
-class AushInterpreter(val context: AushContext) {
+class AushInterpreter() {
     val logger = Logging.getLogger("AushInterpreter")
     val executorsClassNames: Map<String, String>
     val exitCmdName: String
+    val cdCmdName: String
 
     init {
-        if (context.getVar(SpecialVars.PATH.name) == null) {
-            context.addVar(SpecialVars.PATH.name, System.getProperty("user.dir"))
-        }
         val cmdPackage = "ru.spbau.mit.aush"
         // auto wiring AUSH built in commands executors
         val r = Reflections(ConfigurationBuilder()
@@ -44,6 +43,7 @@ class AushInterpreter(val context: AushContext) {
                 .map { it.first.name() to it.second.canonicalName }
                 .toMap()
         exitCmdName = ExitExecutor().name()
+        cdCmdName = CdExecutor().name()
     }
 
     /**
@@ -51,7 +51,7 @@ class AushInterpreter(val context: AushContext) {
      */
     fun execute(statement: Statement) {
         // replacing variables
-        val replacer = VarReplacingVisitor(context)
+        val replacer = VarReplacingVisitor()
         val statementWithVars = replacer.replace(statement)
 
         val preparer = PrepareVisitor()
@@ -68,7 +68,12 @@ class AushInterpreter(val context: AushContext) {
         logger.info("executing ${statement.cmdName}")
 
         if (statement.cmdName == exitCmdName) {
-            System.exit(context.getExitCode())
+            System.exit(AushContext.instance.getExitCode())
+        }
+
+        if (statement.cmdName == cdCmdName) {
+            CdExecutor().exec(statement.args, System.`in`, System.out)
+            return
         }
 
         val pb = getProcessBuilder(statement)
@@ -76,7 +81,7 @@ class AushInterpreter(val context: AushContext) {
         try {
             val process = pb.start()
             logger.info("Waiting for process to finish...")
-            context.setExitCode(process.waitFor())
+            AushContext.instance.setExitCode(process.waitFor())
         } catch (e: IOException) {
             throw CmdExecutionError("Error running process: ${statement.cmdName}")
         }
@@ -94,6 +99,7 @@ class AushInterpreter(val context: AushContext) {
                     statement.args
             )
         }
+        pb.environment().putAll(AushContext.instance.getVars())
         return pb
     }
 
@@ -126,12 +132,12 @@ class AushInterpreter(val context: AushContext) {
             lastProcess.inputStream.close()
         }
         // calculating exit code (and waiting for process termination)
-        context.setExitCode(if (processes.map { it.waitFor() }.any { it == 0 }) 0 else 1)
+        AushContext.instance.setExitCode(if (processes.map { it.waitFor() }.any { it == 0 }) 0 else 1)
     }
 
     private fun execAssignCmd(statement: Statement.Assign) {
         logger.info("Adding var: ${statement.varName}, value = ${statement.value}")
-        context.addVar(statement.varName, statement.value)
-        context.setExitCode(0)
+        AushContext.instance.addVar(statement.varName, statement.value)
+        AushContext.instance.setExitCode(0)
     }
 }
