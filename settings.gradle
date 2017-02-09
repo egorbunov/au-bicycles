@@ -1,2 +1,4 @@
 rootProject.name = 'au-bicycles'
 
+include 'task1-shell'
+
