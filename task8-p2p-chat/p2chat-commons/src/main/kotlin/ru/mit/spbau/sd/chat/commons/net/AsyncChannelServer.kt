@@ -99,8 +99,10 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
      * This method immediately returns, but if previous writing was not finished yet
      *
      * @param msg message to sent through channel
+     * @param onComplete invoked in case of successful write completion
+     * @param onFail on fail handler
      */
-    fun writeMessage(msg: U) {
+    fun writeMessage(msg: U, onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
         logger.debug("Adding message write request, message: $msg")
 
         /*
@@ -131,6 +133,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
 
                         if (writingState.get() is WritingIsDone) {
                             logger.debug("Whole message written to channel!")
+                            onComplete()
                             synchronized(writingStatesQueue) {
                                 if (writingStatesQueue.isNotEmpty()) {
                                     writingState.set(writingStatesQueue.remove())
@@ -146,6 +149,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
 
                     override fun failed(exc: Throwable?, attachment: Nothing?) {
                         logger.error("Failed to complete async. write: $exc")
+                        onFail(exc)
                     }
                 })
             } else {
@@ -153,6 +157,13 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
                 writingStatesQueue.add(createWritingState(msg))
             }
         }
+    }
+
+    /**
+     * write message with empty fail handler and complete handler
+     */
+    fun writeMessage(msg: U) {
+        writeMessage(msg, {}, {})
     }
 
     /**
