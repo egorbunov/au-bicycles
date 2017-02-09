@@ -1,7 +1,13 @@
 package ru.mir.spbau.sd.chat.client.net
 
+import java.net.SocketAddress
+import java.nio.channels.AsynchronousSocketChannel
+
 /**
- * Service class, which 
+ * Class, which provides interface to chat server
  */
-internal class ChatServerService {
+class ChatServerService(val serverAddress: SocketAddress) {
+    fun x() {
+        val s = AsynchronousSocketChannel.open()
+    }
 }

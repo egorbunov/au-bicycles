@@ -1,4 +1,4 @@
-package ru.mit.spbau.sd.chat.commons.net
+package ru.mit.spbau.sd.chat.commons.net.state
 
 import java.nio.ByteBuffer
 

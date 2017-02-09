@@ -5,5 +5,5 @@ package ru.mir.spbau.sd.chat.client.msg
  * Date: 2/6/17
  * Email: egor-mailbox@ya.com
  */
-interface ChatServerMsgListener {
+interface UsersNetEventsReactor {
 }

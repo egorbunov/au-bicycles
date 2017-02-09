@@ -65,5 +65,4 @@ message PeerToPeerMsg {
     ChatMessage message = 1;
     ChatUserIpAddr userFromId = 2;
     ChatUserInfo userInfo = 3;
-
 }

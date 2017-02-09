@@ -1,4 +1,4 @@
-package ru.mit.spbau.sd.chat.commons.net
+package ru.mit.spbau.sd.chat.commons.net.state
 
 import java.nio.ByteBuffer
 
@@ -19,7 +19,7 @@ class GatheringWriting(private val buffers: Array<ByteBuffer>) : WritingState {
         val curBuf = buffers[currentBufIdx]
         if (!curBuf.hasRemaining()) {
             if (currentBufIdx == buffers.size - 1) {
-                return NothingToWrite()
+                return WritingIsDone()
             } else {
                 currentBufIdx += 1
             }

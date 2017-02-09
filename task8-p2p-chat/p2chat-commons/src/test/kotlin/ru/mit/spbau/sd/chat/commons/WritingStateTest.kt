@@ -2,8 +2,8 @@ package ru.mit.spbau.sd.chat.commons
 
 import org.junit.Assert
 import org.junit.Test
-import ru.mit.spbau.sd.chat.commons.net.GatheringWriting
-import ru.mit.spbau.sd.chat.commons.net.WritingState
+import ru.mit.spbau.sd.chat.commons.net.state.GatheringWriting
+import ru.mit.spbau.sd.chat.commons.net.state.WritingState
 import ru.mit.spbau.sd.chat.commons.net.createStartWritingState
 import java.nio.ByteBuffer
 

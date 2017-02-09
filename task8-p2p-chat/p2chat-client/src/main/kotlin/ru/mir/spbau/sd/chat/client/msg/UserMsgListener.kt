@@ -1,9 +1,10 @@
 package ru.mir.spbau.sd.chat.client.msg
 
+import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
+
 /**
- * Created by: Egor Gorbunov
- * Date: 2/6/17
- * Email: egor-mailbox@ya.com
+ * One, who listens to messages, which come from one user connection
  */
 interface UserMsgListener {
+    fun gotMessage(message: PeerToPeerMsg)
 }

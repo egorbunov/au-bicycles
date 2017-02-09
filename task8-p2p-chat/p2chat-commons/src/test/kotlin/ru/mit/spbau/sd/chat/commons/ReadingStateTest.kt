@@ -2,9 +2,9 @@ package ru.mit.spbau.sd.chat.commons
 
 import org.junit.Assert
 import org.junit.Test
-import ru.mit.spbau.sd.chat.commons.net.ChainedReading
-import ru.mit.spbau.sd.chat.commons.net.MessageRead
-import ru.mit.spbau.sd.chat.commons.net.ReadingState
+import ru.mit.spbau.sd.chat.commons.net.state.ChainedReading
+import ru.mit.spbau.sd.chat.commons.net.state.MessageRead
+import ru.mit.spbau.sd.chat.commons.net.state.ReadingState
 import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
 import java.nio.ByteBuffer
 

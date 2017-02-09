@@ -4,10 +4,10 @@ import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.commons.listToUsersList
 import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
 import ru.mit.spbau.sd.chat.commons.net.createStartWritingState
-import ru.mit.spbau.sd.chat.commons.net.MessageRead
-import ru.mit.spbau.sd.chat.commons.net.NothingToWrite
-import ru.mit.spbau.sd.chat.commons.net.ReadingState
-import ru.mit.spbau.sd.chat.commons.net.WritingState
+import ru.mit.spbau.sd.chat.commons.net.state.MessageRead
+import ru.mit.spbau.sd.chat.commons.net.state.NothingToWrite
+import ru.mit.spbau.sd.chat.commons.net.state.ReadingState
+import ru.mit.spbau.sd.chat.commons.net.state.WritingState
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToServerMsg
 import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
