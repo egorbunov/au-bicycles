@@ -62,7 +62,8 @@ message PeerToPeerMsg {
         I_AM_GONE_OFFLINE = 3;
         DISCONNECT = 4;
     }
-    ChatMessage message = 1;
-    ChatUserIpAddr userFromId = 2;
-    ChatUserInfo userInfo = 3;
+    Type msgType = 1;
+    ChatMessage message = 2;
+    ChatUserIpAddr userFromId = 3;
+    ChatUserInfo userInfo = 4;
 }
