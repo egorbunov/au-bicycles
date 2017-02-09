@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference
  * @param T - type of message read from channel (request type)
  * @param U - type of message written to channel (response type)
  */
-class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel,
+open class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel,
                                   private val createReadingState: () -> ReadingState<T>,
                                   private val createWritingState: (msg: U) -> WritingState,
                                   private val messageListener: MessageListener<T, AsyncChannelServer<T, U>>) {
@@ -70,7 +70,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
     /**
      * Starts listening for incoming messages
      */
-    fun start() {
+    open fun start() {
         channel.read(readingState.getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
             override fun completed(result: Int?, attachment: Nothing?) {
                 logger.debug("Completing async read...")
@@ -102,7 +102,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
      * @param onComplete invoked in case of successful write completion
      * @param onFail on fail handler
      */
-    fun writeMessage(msg: U, onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
+    open fun writeMessage(msg: U, onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
         logger.debug("Adding message write request, message: $msg")
 
         /*
@@ -162,7 +162,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
     /**
      * write message with empty fail handler and complete handler
      */
-    fun writeMessage(msg: U) {
+    open fun writeMessage(msg: U) {
         writeMessage(msg, {}, {})
     }
 
@@ -170,7 +170,7 @@ class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel
      * Close channel; cleanup resources.
      * One must call it after work is done.
      */
-    fun destroy() {
+    open fun destroy() {
         channel.close()
     }
 }
