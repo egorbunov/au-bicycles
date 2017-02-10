@@ -1,11 +1,12 @@
 package ru.mit.spbau.sd.chat.commons.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.commons.limit
 import ru.mit.spbau.sd.chat.commons.net.state.*
 import java.nio.channels.AsynchronousSocketChannel
 import java.nio.channels.CompletionHandler
 import java.util.*
-import java.util.concurrent.atomic.AtomicReference
+import java.util.concurrent.locks.ReentrantLock
 
 /**
  * One asynchronous channel server. This class serves exact one connection, which
@@ -50,21 +51,26 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     }
 
 
-
     private var readingState = createReadingState()
 
     private val nothingToWriteState = NothingToWrite()
     /**
      * See notes on atomicity of this field in comments inside `writeMessage` method
      */
-    private val writingState: AtomicReference<WritingState> = AtomicReference(nothingToWriteState)
+    @Volatile
+    private var writingState: WritingState = nothingToWriteState
 
     /**
-     * Queue of pending writings. It is blocking for the same reasons
-     * as `writingState` is volatile (see comment above)
+     * Queue of pending writings.
+     * It is possible, that multiple threads will touch this queue,
+     * that why all interactions with it are covered with `writingQueueLock`.
+     * Hopefully, sections, there this class work with queue, are small, so
+     * locking shouldn't be very time-consuming.
      */
     private val writingStatesQueue = LinkedList<WritingState>()
 
+    private val writingQueueLock = ReentrantLock()
+    private val writingQueueIsEmpty = writingQueueLock.newCondition()
 
 
     /**
@@ -78,7 +84,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
                 readingState = readingState.proceed()
                 if (readingState is MessageRead<T>) {
                     val message = readingState.getMessage()
-                    logger.debug("Got message from channel: $message")
+                    logger.debug("Got message from channel: ${message.toString().limit(1000)}...")
                     messageListener.messageReceived(message, this@AsyncServer)
                     // renewing reading state, so server is again available
                     // for new incoming messages
@@ -103,10 +109,10 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
      * @param onFail on fail handler
      */
     open fun writeMessage(msg: U, onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
-        logger.debug("Adding message write request, message: $msg")
+        logger.debug("Adding message write request, message: ${msg.toString().limit(1000)}...")
 
         /*
-            Ugly synchronization. I use it because it seems possible, that
+            I use this synchronization because it seems possible, that
             this method will be used from multiple threads: consider consequent reads
             from channel occur:
                 1. first read is completed and completion handler is executed in Thread 1
@@ -115,46 +121,65 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
             That means it is possible to have two concurrent `writeMessage` calls from 2 threads, because
             `messageListener`, which is invoked by read completion handler, may execute `writeMessage`.
          */
-        synchronized(writingStatesQueue) {
-            if (writingState.get() == nothingToWriteState) {
+        writingQueueLock.lock()
+        try {
+            if (writingState == nothingToWriteState) {
                 assert(writingStatesQueue.isEmpty())
 
                 // nobody is writing now, so we just setting up new state and starting async. write
 
-                writingState.set(createWritingState(msg))
-                channel.write(writingState.get().getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
-                    override fun completed(result: Int?, attachment: Nothing?) {
-                        logger.debug("Completing async write...")
-
-                        // This write to `writingState` is not covered by synchronized section,
-                        // so no happens-before rules apply in case writingState is not volatile or something,
-                        // that's why it is atomic (TODO: just volatile is fine?)
-                        writingState.set(writingState.get().proceed())
-
-                        if (writingState.get() is WritingIsDone) {
-                            logger.debug("Whole message written to channel!")
-                            onComplete()
-                            synchronized(writingStatesQueue) {
-                                if (writingStatesQueue.isNotEmpty()) {
-                                    writingState.set(writingStatesQueue.remove())
-                                    channel.write(writingState.get().getBuffer(), null, this)
-                                } else {
-                                    writingState.set(nothingToWriteState)
-                                }
-                            }
-                        } else {
-                            channel.write(writingState.get().getBuffer(), null, this)
-                        }
-                    }
-
-                    override fun failed(exc: Throwable?, attachment: Nothing?) {
-                        logger.error("Failed to complete async. write: $exc")
-                        onFail(exc)
-                    }
-                })
+                writingState = createWritingState(msg)
+                channel.write(
+                        writingState.getBuffer(),
+                        null,
+                        createWriteCompletionHandler(onComplete, onFail))
             } else {
                 logger.debug("Messages in write queue: ${writingStatesQueue.size}")
                 writingStatesQueue.add(createWritingState(msg))
+            }
+        } finally {
+            writingQueueLock.unlock()
+        }
+    }
+
+    /**
+     * Creates completion handler for write operation.
+     */
+    private fun createWriteCompletionHandler(onComplete: () -> Unit, onFail: (Throwable?) -> Unit):
+            CompletionHandler<Int, Nothing?> {
+        return object : CompletionHandler<Int, Nothing?> {
+            override fun completed(result: Int?, attachment: Nothing?) {
+                logger.debug("Completing async write...")
+
+                writingState = writingState.proceed()
+
+                if (writingState is WritingIsDone) {
+                    logger.debug("Whole message written to channel!")
+                    onComplete()
+
+                    // acquiring lock, because we are going to work with the queue
+                    writingQueueLock.lock()
+                    try {
+                        if (writingStatesQueue.isNotEmpty()) {
+                            writingState = writingStatesQueue.remove()
+                            channel.write(writingState.getBuffer(), null, this)
+                        } else {
+                            // signalling that queue is empty
+                            writingQueueIsEmpty.signalAll()
+                            writingState = nothingToWriteState
+                        }
+                    } finally {
+                        writingQueueLock.unlock()
+                    }
+                } else {
+                    logger.debug("Buffer not fully written, starting new async write...")
+                    channel.write(writingState.getBuffer(), null, this)
+                }
+            }
+
+            override fun failed(exc: Throwable?, attachment: Nothing?) {
+                logger.error("Failed to complete async. write: $exc")
+                onFail(exc)
             }
         }
     }
@@ -164,6 +189,27 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
      */
     open fun writeMessage(msg: U) {
         writeMessage(msg, {}, {})
+    }
+
+    /**
+     * Synchronously writing message to channel.
+     * This method will wait for all pending writes to compete,
+     * and start it's own synchronous write to channel.
+     */
+    open fun writeMessageSync(msg: U) {
+        writingQueueLock.lock()
+        try {
+            while (writingStatesQueue.isNotEmpty()) {
+                writingQueueIsEmpty.await()
+            }
+            var wrState = createWritingState(msg)
+            while (wrState !is WritingIsDone) {
+                channel.write(wrState.getBuffer()).get()
+                wrState = wrState.proceed()
+            }
+        } finally {
+            writingQueueLock.unlock()
+        }
     }
 
     /**

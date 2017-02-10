@@ -4,6 +4,7 @@ import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.User
 import ru.spbau.mit.sd.commons.proto.UsersList
+import java.net.InetAddress
 import java.net.InetSocketAddress
 
 /**
@@ -23,6 +24,10 @@ fun inetSockAddrToUserIp(addr: InetSocketAddress): ChatUserIpAddr {
             .build()!!
 }
 
+fun userIpToSockAddr(userIp: ChatUserIpAddr): InetSocketAddress {
+    return InetSocketAddress(InetAddress.getByName(userIp.ip), userIp.port)
+}
+
 fun listToUsersList(list: List<Pair<ChatUserIpAddr, ChatUserInfo>>): UsersList {
     return UsersList.newBuilder()
             .addAllUsers(
@@ -33,4 +38,15 @@ fun listToUsersList(list: List<Pair<ChatUserIpAddr, ChatUserInfo>>): UsersList {
                         .build()!!
             })
             .build()!!
+}
+
+/**
+ * Returns the string, with maximum `n` chars
+ */
+fun String.limit(n: Int): String {
+    if (this.length < n) {
+        return this
+    } else {
+        return this.substring(0..n)
+    }
 }

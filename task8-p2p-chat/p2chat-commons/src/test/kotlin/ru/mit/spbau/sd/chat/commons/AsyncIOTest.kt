@@ -43,6 +43,7 @@ class AsyncIOTest {
         override fun messageReceived(msg: String, attachment: AsyncServer<String, String>) {
             clientReceivedResponses.add(msg)
             countDownLatch!!.countDown()
+
         }
     }
 
@@ -123,7 +124,7 @@ class AsyncIOTest {
 
     @Test
     fun testManyWrites() {
-        val clientServerMsgs = (0..1000).map(Int::toString)
+        val clientServerMsgs = (0..5000).map(Int::toString)
         countDownLatch = CountDownLatch(clientServerMsgs.size)
         clientServerMsgs.forEach {
             clientSideConnSrv!!.writeMessage(it)
@@ -131,5 +132,27 @@ class AsyncIOTest {
         countDownLatch!!.await()
 
         Assert.assertEquals(clientServerMsgs, serverReceivedRequests)
+    }
+
+    @Test
+    fun testSyncWrite() {
+        countDownLatch = CountDownLatch(1)
+        val message = "hello"
+        clientSideConnSrv!!.writeMessageSync(message)
+        countDownLatch!!.await()
+
+        Assert.assertEquals(1, serverReceivedRequests.size)
+        Assert.assertEquals(message, serverReceivedRequests[0])
+    }
+
+    @Test
+    fun testBigMessage() {
+        countDownLatch = CountDownLatch(1)
+        val bigMessage = "x".repeat(10000000)
+        clientSideConnSrv!!.writeMessage(bigMessage)
+        countDownLatch!!.await()
+
+        Assert.assertEquals(1, serverReceivedRequests.size)
+        Assert.assertEquals(bigMessage, serverReceivedRequests[0])
     }
 }

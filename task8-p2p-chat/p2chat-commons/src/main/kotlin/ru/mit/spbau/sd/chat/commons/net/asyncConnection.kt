@@ -64,17 +64,29 @@ class AsyncConnectionAcceptor(val port: Int,
  * @param connectionListener
  */
 fun asyncConnect(address: SocketAddress, connectionListener: AsyncConnectionListener) {
+    asyncConnect(address,
+            onComplete = { x: AsynchronousSocketChannel ->
+                connectionListener.connectionEstablished(x)
+            },
+            onFail = {
+            })
+}
+
+fun asyncConnect(address: SocketAddress,
+                 onComplete: (AsynchronousSocketChannel) -> Unit,
+                 onFail: (Throwable?) -> Unit) {
     val logger = LoggerFactory.getLogger("AsyncConnectMethod")!!
 
     val connection = AsynchronousSocketChannel.open()
     connection.connect(address, null, object: CompletionHandler<Void, Nothing?> {
         override fun completed(result: Void?, attachment: Nothing?) {
             logger.debug("Connection wit $address established successfully")
-            connectionListener.connectionEstablished(connection)
+            onComplete(connection)
         }
 
         override fun failed(exc: Throwable?, attachment: Nothing?) {
             logger.error("Async. connect failed, dest: $address")
+            onFail(exc)
         }
     })
 }
