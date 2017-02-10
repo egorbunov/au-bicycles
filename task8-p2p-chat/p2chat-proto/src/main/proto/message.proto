@@ -30,16 +30,17 @@ message ChatMessage {
 
 message PeerToServerMsg {
     enum Type {
-        PEER_ONLINE = 0;
-        PEER_GONE_OFFLINE = 1;
-        GET_AVAILABLE_USERS = 2;
-        MY_INFO_CHANGED = 3;
-        DISCONNECT = 4; // message designating end of server-peer session, that does not mean,
+        CONNECT = 0; // peer sends this message at the start of session, providing it's id
+        PEER_ONLINE = 1;
+        PEER_GONE_OFFLINE = 2;
+        GET_AVAILABLE_USERS = 3;
+        MY_INFO_CHANGED = 4;
+        DISCONNECT = 5; // message designating end of server-peer session, that does not mean,
                         // that peer gone offline, but it just don't want to hold server connection
     }
 
     Type msgType = 1;
-    ChatUserIpAddr userId = 2;
+    ChatUserIpAddr userId = 2; // id is ip address, with which user can be reached by others
     ChatUserInfo userInfo = 3;
 }
 
@@ -56,11 +57,12 @@ message ServerToPeerMsg {
 
 message PeerToPeerMsg {
     enum Type {
-        TEXT_MESSAGE = 0;
-        MY_INFO_CHANGED = 1;
-        I_AM_ONLINE = 2;
-        I_AM_GONE_OFFLINE = 3;
-        DISCONNECT = 4;
+        CONNECT = 0;
+        TEXT_MESSAGE = 1;
+        MY_INFO_CHANGED = 2;
+        I_AM_ONLINE = 3;
+        I_AM_GONE_OFFLINE = 4;
+        DISCONNECT = 5;
     }
     Type msgType = 1;
     ChatMessage message = 2;

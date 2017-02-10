@@ -1,40 +1,32 @@
 package ru.mir.spbau.sd.chat.server
 
-import com.nhaarman.mockito_kotlin.*
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doThrow
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.P2SMessageConstructor
-import ru.mit.spbau.sd.chat.commons.net.AsyncChannelServer
-import ru.mit.spbau.sd.chat.server.net.OnePeerMessageDispatcher
-import ru.mit.spbau.sd.chat.server.net.PeerDisconnectListener
-import ru.mit.spbau.sd.chat.server.net.PeerMsgListener
+import ru.mit.spbau.sd.chat.commons.net.AsyncServer
+import ru.mit.spbau.sd.chat.server.net.PeerEventHandler
+import ru.mit.spbau.sd.chat.server.net.PeersSessionController
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToServerMsg
 import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
 
 
-class PeerMsgDispatcherTest {
+class TestMessageDispatch {
     @Test
-    fun testDisconnectDispatched() {
-        val disconnectListener: PeerDisconnectListener<AsyncChannelServer<PeerToServerMsg, ServerToPeerMsg>>
-                = mock()
-
-        val dispatcher = OnePeerMessageDispatcher(mock(), disconnectListener)
+    fun testMessageDispatch() {
+        val msgListener: PeerEventHandler<ChatUserIpAddr> = mock()
+        val dispatcher = PeersSessionController(msgListener)
         val p2sMsgBuilder = P2SMessageConstructor("1.1.1.1", 42)
-        val attachment: AsyncChannelServer<PeerToServerMsg, ServerToPeerMsg> = mock()
-
-        dispatcher.messageReceived(p2sMsgBuilder.disconnectMsg(), attachment)
-        verify(disconnectListener).peerDisconnected(attachment)
-    }
-
-    @Test
-    fun testOtherMessagesDispatched() {
-        val msgListener: PeerMsgListener<ChatUserIpAddr> = mock()
-        val dispatcher = OnePeerMessageDispatcher(msgListener, mock())
-        val p2sMsgBuilder = P2SMessageConstructor("1.1.1.1", 42)
-        val attachment: AsyncChannelServer<PeerToServerMsg, ServerToPeerMsg> = mock {
+        val attachment: AsyncServer<PeerToServerMsg, ServerToPeerMsg> = mock {
             onGeneric { writeMessage(any()) } doThrow RuntimeException()
+            on { destroy() } doThrow RuntimeException()
         }
+
+        dispatcher.messageReceived(p2sMsgBuilder.connectMsg(), attachment)
 
         try {
             dispatcher.messageReceived(p2sMsgBuilder.availableUsersRequestMsg(), attachment)
@@ -51,5 +43,10 @@ class PeerMsgDispatcherTest {
 
         dispatcher.messageReceived(p2sMsgBuilder.peerOnlineMsg(userInfo), attachment)
         verify(msgListener).peerBecomeOnline(userId = p2sMsgBuilder.userId, userInfo = userInfo)
+
+        try {
+            dispatcher.messageReceived(p2sMsgBuilder.disconnectMsg(), attachment)
+        } catch (e: RuntimeException) {}
+        verify(attachment).destroy()
     }
 }

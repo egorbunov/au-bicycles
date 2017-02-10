@@ -13,6 +13,18 @@ class P2SMessageConstructor(val userId: ChatUserIpAddr) {
     constructor(ip: String, port: Int) : this(ChatUserIpAddr.newBuilder()
             .setIp(ip).setPort(port).build())
 
+
+    /**
+     * Connect message; This message is sent just after connection is
+     * established, every time.
+     */
+    fun connectMsg(): PeerToServerMsg {
+        return PeerToServerMsg.newBuilder()
+                .setMsgType(PeerToServerMsg.Type.CONNECT)
+                .setUserId(userId)
+                .build()
+    }
+
     /**
      * Returns constructed peer to server message, which stands, that
      * peer with given identifier (ip, port) is now online and available
@@ -21,7 +33,6 @@ class P2SMessageConstructor(val userId: ChatUserIpAddr) {
     fun peerOnlineMsg(userInfo: ChatUserInfo): PeerToServerMsg {
         return PeerToServerMsg.newBuilder()
                 .setMsgType(PeerToServerMsg.Type.PEER_ONLINE)
-                .setUserId(userId)
                 .setUserInfo(userInfo)
                 .build()!!
     }
@@ -33,7 +44,6 @@ class P2SMessageConstructor(val userId: ChatUserIpAddr) {
     fun peerGoneOfflineMsg(): PeerToServerMsg {
         return PeerToServerMsg.newBuilder()
                 .setMsgType(PeerToServerMsg.Type.PEER_GONE_OFFLINE)
-                .setUserId(userId)
                 .build()!!
     }
 
@@ -44,7 +54,6 @@ class P2SMessageConstructor(val userId: ChatUserIpAddr) {
     fun availableUsersRequestMsg(): PeerToServerMsg {
         return PeerToServerMsg.newBuilder()
                 .setMsgType(PeerToServerMsg.Type.GET_AVAILABLE_USERS)
-                .setUserId(userId)
                 .build()
     }
 
@@ -91,7 +100,6 @@ class P2PMessageConstructor(val userId: ChatUserIpAddr) {
     fun iAmOnlineMsg(): PeerToPeerMsg {
         return PeerToPeerMsg.newBuilder()
                 .setMsgType(PeerToPeerMsg.Type.I_AM_ONLINE)
-                .setUserFromId(userId)
                 .build()!!
     }
 
@@ -102,7 +110,6 @@ class P2PMessageConstructor(val userId: ChatUserIpAddr) {
     fun iAmGoneOfflineMsg(userInfo: ChatUserInfo): PeerToPeerMsg {
         return PeerToPeerMsg.newBuilder()
                 .setMsgType(PeerToPeerMsg.Type.I_AM_GONE_OFFLINE)
-                .setUserFromId(userId)
                 .setUserInfo(userInfo)
                 .build()!!
     }
@@ -113,7 +120,6 @@ class P2PMessageConstructor(val userId: ChatUserIpAddr) {
     fun textMessageMsg(msg: ChatMessage): PeerToPeerMsg {
         return PeerToPeerMsg.newBuilder()
                 .setMsgType(PeerToPeerMsg.Type.TEXT_MESSAGE)
-                .setUserFromId(userId)
                 .setMessage(msg)
                 .build()
     }
@@ -125,8 +131,18 @@ class P2PMessageConstructor(val userId: ChatUserIpAddr) {
     fun myInfoChangedMsg(info: ChatUserInfo): PeerToPeerMsg {
         return PeerToPeerMsg.newBuilder()
                 .setMsgType(PeerToPeerMsg.Type.MY_INFO_CHANGED)
-                .setUserFromId(userId)
                 .setUserInfo(info)
+                .build()
+    }
+
+    /**
+     * The very first message, which must be sent after connection established.
+     * That is needed to specify user id, which is now talking to other user
+     */
+    fun connectMsg(): PeerToPeerMsg {
+        return PeerToPeerMsg.newBuilder()
+                .setMsgType(PeerToPeerMsg.Type.CONNECT)
+                .setUserFromId(userId)
                 .build()
     }
 
@@ -136,7 +152,6 @@ class P2PMessageConstructor(val userId: ChatUserIpAddr) {
     fun disconnectMsg(): PeerToPeerMsg {
         return PeerToPeerMsg.newBuilder()
                 .setMsgType(PeerToPeerMsg.Type.DISCONNECT)
-                .setUserFromId(userId)
                 .build()
     }
 }

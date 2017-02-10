@@ -12,7 +12,7 @@ import java.util.*
  * chat model
  */
 class UserMapPeerMsgListener(private val usersMap: AbstractMap<InetSocketAddress, ChatUserInfo>)
-    : PeerMsgListener<ChatUserIpAddr> {
+    : PeerEventHandler<ChatUserIpAddr> {
 
     override fun peerBecomeOnline(userId: ChatUserIpAddr, userInfo: ChatUserInfo) {
         val id = chatUserIpAddrToSockAddr(userId)

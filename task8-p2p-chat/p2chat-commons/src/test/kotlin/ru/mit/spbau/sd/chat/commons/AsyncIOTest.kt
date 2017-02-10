@@ -18,9 +18,9 @@ class AsyncIOTest {
     var countDownLatch: CountDownLatch? = null
 
     // server side connection server
-    var serverSideConnSrv: AsyncChannelServer<String, String>? = null
+    var serverSideConnSrv: AsyncServer<String, String>? = null
     // client side connection server
-    var clientSideConnSrv: AsyncChannelServer<String, String>? = null
+    var clientSideConnSrv: AsyncServer<String, String>? = null
 
     /**
      * array with messages, received by server from client
@@ -32,15 +32,15 @@ class AsyncIOTest {
     val clientReceivedResponses: MutableList<String> = Collections.synchronizedList(ArrayList<String>())!!
 
 
-    val serverMessageListener = object: MessageListener<String, AsyncChannelServer<String, String>> {
-        override fun messageReceived(msg: String, attachment: AsyncChannelServer<String, String>) {
+    val serverMessageListener = object: MessageListener<String, AsyncServer<String, String>> {
+        override fun messageReceived(msg: String, attachment: AsyncServer<String, String>) {
             serverReceivedRequests.add(msg)
             countDownLatch!!.countDown()
         }
     }
 
-    val clientMessageListener = object: MessageListener<String, AsyncChannelServer<String, String>> {
-        override fun messageReceived(msg: String, attachment: AsyncChannelServer<String, String>) {
+    val clientMessageListener = object: MessageListener<String, AsyncServer<String, String>> {
+        override fun messageReceived(msg: String, attachment: AsyncServer<String, String>) {
             clientReceivedResponses.add(msg)
             countDownLatch!!.countDown()
         }
@@ -48,7 +48,7 @@ class AsyncIOTest {
 
     val serverConnListener = object: AsyncConnectionListener {
         override fun connectionEstablished(channel: AsynchronousSocketChannel) {
-            serverSideConnSrv = AsyncChannelServer(
+            serverSideConnSrv = AsyncServer(
                     channel,
                     { createStartReadingState { String(it) } },
                     { str -> createStartWritingState(str.toByteArray()) },
@@ -76,7 +76,7 @@ class AsyncIOTest {
         // waiting for server to establish connection with this client
         countDownLatch!!.await()
 
-        clientSideConnSrv = AsyncChannelServer(
+        clientSideConnSrv = AsyncServer(
                 clientConnection,
                 { createStartReadingState { String(it) }},
                 { str -> createStartWritingState(str.toByteArray())},

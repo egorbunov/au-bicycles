@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicReference
  * user wants to call `start()` method and to destroy channel (passed as constructor
  * argument) and all other server resources user wants to invoke `destroy()`.
  *
- * AsyncChannelServer performs asynchronous reading/writing from/to given channel, but
+ * AsyncServer performs asynchronous reading/writing from/to given channel, but
  * to be reusable and generous it need to be wired with a few helpers:
  *
  * @param createReadingState - factory-method, which creates an initial (empty) state,
@@ -23,30 +23,30 @@ import java.util.concurrent.atomic.AtomicReference
  *        to write data from it's buffer to channel
  * @param messageListener - the guy, who receives all read messages from socket channel.
  *
- * AsyncChannelServer treats message as fully read in case it's internal reading state,
+ * AsyncServer treats message as fully read in case it's internal reading state,
  * initialized with `createReadingState()` approaches `MessageRead<T>` state.
  *
- * And AsyncChannelServer understood, that message is fully written to socket channel
+ * And AsyncServer understood, that message is fully written to socket channel
  * iff created by `createWritingState(msg: U)` writing state approaches `NothingToWrite`
  * state.
  *
  * Every read message from channel will be passed to `messageListener` and for logical
- * reasons it is passed alongside with `AsyncChannelServer` instance (which got this message)
+ * reasons it is passed alongside with `AsyncServer` instance (which got this message)
  * itself. That is to be used for answering to message through the same channel and also
- * this thing may be used for proper destruction of `AsyncChannelServer` instance as a reaction
+ * this thing may be used for proper destruction of `AsyncServer` instance as a reaction
  * on some event
  *
  *
  * @param T - type of message read from channel (request type)
  * @param U - type of message written to channel (response type)
  */
-open class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketChannel,
-                                  private val createReadingState: () -> ReadingState<T>,
-                                  private val createWritingState: (msg: U) -> WritingState,
-                                  private val messageListener: MessageListener<T, AsyncChannelServer<T, U>>) {
+open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
+                                private val createReadingState: () -> ReadingState<T>,
+                                private val createWritingState: (msg: U) -> WritingState,
+                                private val messageListener: MessageListener<T, AsyncServer<T, U>>) {
 
     companion object {
-        val logger = LoggerFactory.getLogger(AsyncChannelServer::class.java)!!
+        val logger = LoggerFactory.getLogger(AsyncServer::class.java)!!
     }
 
 
@@ -79,7 +79,7 @@ open class AsyncChannelServer<T, in U>(private val channel: AsynchronousSocketCh
                 if (readingState is MessageRead<T>) {
                     val message = readingState.getMessage()
                     logger.debug("Got message from channel: $message")
-                    messageListener.messageReceived(message, this@AsyncChannelServer)
+                    messageListener.messageReceived(message, this@AsyncServer)
                     // renewing reading state, so server is again available
                     // for new incoming messages
                     readingState = createReadingState()
