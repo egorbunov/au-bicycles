@@ -58,7 +58,7 @@ class CdExecutorTest {
     @Test
     fun exec() {
         val oldDir = AushContext.instance.getVar(SpecialVars.PWD)
-        executor!!.exec(Collections.singletonList("TEST_FOLDER"), System.`in`, System.out)
+        Assert.assertEquals(0, executor!!.exec(Collections.singletonList("TEST_FOLDER"), System.`in`, System.out))
         val newDir = AushContext.instance.getVar(SpecialVars.PWD)
         Assert.assertEquals(oldDir + "/TEST_FOLDER", newDir)
     }

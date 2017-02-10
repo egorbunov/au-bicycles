@@ -59,7 +59,7 @@ class LsExecutorTest {
     @Test
     fun execNoArgs() {
         val out = ByteArrayOutputStream()
-        executor!!.exec(emptyList(), System.`in`, out)
+        Assert.assertEquals(0, executor!!.exec(emptyList(), System.`in`, out))
         val actual = String(out.toByteArray())
 
         val expected = listOf(filename, foldername).sorted().joinToString("\n") + "\n"
@@ -70,7 +70,7 @@ class LsExecutorTest {
     @Test
     fun execFile() {
         val out = ByteArrayOutputStream()
-        executor!!.exec(Collections.singletonList(testFile!!.absolutePath), System.`in`, out)
+        Assert.assertEquals(0, executor!!.exec(Collections.singletonList(testFile!!.absolutePath), System.`in`, out))
         val actual = String(out.toByteArray())
 
         val expected = testFile!!.absolutePath + "\n"
