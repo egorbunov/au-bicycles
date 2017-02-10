@@ -79,7 +79,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     open fun start() {
         channel.read(readingState.getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
             override fun completed(result: Int?, attachment: Nothing?) {
-                logger.debug("Completing async read...")
+//                logger.debug("Completing async read...")
 
                 readingState = readingState.proceed()
                 if (readingState is MessageRead<T>) {
@@ -91,7 +91,9 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
                     readingState = createReadingState()
                 }
                 // subscribing again (in both cases of read and not fully read message)
-                channel.read(readingState.getBuffer(), null, this)
+                if (channel.isOpen) {
+                    channel.read(readingState.getBuffer(), null, this)
+                }
             }
 
             override fun failed(exc: Throwable?, attachment: Nothing?) {
@@ -149,7 +151,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
             CompletionHandler<Int, Nothing?> {
         return object : CompletionHandler<Int, Nothing?> {
             override fun completed(result: Int?, attachment: Nothing?) {
-                logger.debug("Completing async write...")
+//                logger.debug("Completing async write...")
 
                 writingState = writingState.proceed()
 
@@ -193,8 +195,10 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
 
     /**
      * Synchronously writing message to channel.
-     * This method will wait for all pending writes to compete,
+     * This method will wait for all pending writes to complete,
      * and start it's own synchronous write to channel.
+     *
+     * So the write starts when write requests queue becomes empty.
      */
     open fun writeMessageSync(msg: U) {
         writingQueueLock.lock()

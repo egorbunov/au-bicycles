@@ -35,6 +35,7 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
                 createWritingState = { createStartWritingState(it.toByteArray()) },
                 messageListener = this
         )
+        newPeer.start()
         peers.add(newPeer)
     }
 

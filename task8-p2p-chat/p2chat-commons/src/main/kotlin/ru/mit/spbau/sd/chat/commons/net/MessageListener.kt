@@ -7,3 +7,11 @@ package ru.mit.spbau.sd.chat.commons.net
 interface MessageListener<in T, in A> {
     fun messageReceived(msg: T, attachment: A)
 }
+
+/**
+ * Listener, which does noting
+ */
+class UselessMessageListener<in T, in A>: MessageListener<T, A> {
+    override fun messageReceived(msg: T, attachment: A) {
+    }
+}

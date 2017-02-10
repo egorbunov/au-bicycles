@@ -40,6 +40,12 @@ fun listToUsersList(list: List<Pair<ChatUserIpAddr, ChatUserInfo>>): UsersList {
             .build()!!
 }
 
+fun usersListToList(usersList: UsersList): List<Pair<ChatUserIpAddr, ChatUserInfo>> {
+    return usersList.usersList!!.map {
+        Pair(it.id!!, it.info!!)
+    }
+}
+
 /**
  * Returns the string, with maximum `n` chars
  */

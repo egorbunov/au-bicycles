@@ -3,19 +3,19 @@ package ru.mit.spbau.sd.chat.server
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionAcceptor
 import ru.mit.spbau.sd.chat.server.net.PeersSessionController
 import ru.mit.spbau.sd.chat.server.net.UserMapPeerMsgListener
-import ru.spbau.mit.sd.commons.proto.ChatUserInfo
-import java.net.InetSocketAddress
-import java.util.concurrent.ConcurrentHashMap
+import java.net.SocketAddress
 
 
-class ChatServer(port: Int) {
-    private val chatModel = ConcurrentHashMap<InetSocketAddress, ChatUserInfo>()
-    private val modelChanger = UserMapPeerMsgListener(chatModel)
-    private val peerSessionController = PeersSessionController(modelChanger)
+class ChatServer(port: Int, msgListener: UserMapPeerMsgListener) {
+    private val peerSessionController = PeersSessionController(msgListener)
     private val connectionAcceptor = AsyncConnectionAcceptor(
             port,
             peerSessionController
     )
+
+    fun address(): SocketAddress {
+        return connectionAcceptor.getAddress()
+    }
 
     fun start() {
         connectionAcceptor.start()

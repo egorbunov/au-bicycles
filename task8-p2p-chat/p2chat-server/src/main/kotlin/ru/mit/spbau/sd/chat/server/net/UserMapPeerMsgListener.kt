@@ -11,7 +11,7 @@ import java.util.*
  * Simple peer message processor, which delegates all events to
  * chat model
  */
-class UserMapPeerMsgListener(private val usersMap: AbstractMap<InetSocketAddress, ChatUserInfo>)
+class UserMapPeerMsgListener(private val usersMap: MutableMap<InetSocketAddress, ChatUserInfo>)
     : PeerEventHandler<ChatUserIpAddr> {
 
     override fun peerBecomeOnline(userId: ChatUserIpAddr, userInfo: ChatUserInfo) {
@@ -24,7 +24,9 @@ class UserMapPeerMsgListener(private val usersMap: AbstractMap<InetSocketAddress
 
     override fun peerGoneOffline(userId: ChatUserIpAddr) {
         val id = chatUserIpAddrToSockAddr(userId)
-        if (id !in usersMap)
+        if (id !in usersMap) {
+            throw IllegalStateException("Can't remove non-existing user")
+        }
         usersMap.remove(id)
     }
 
