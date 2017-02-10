@@ -25,9 +25,6 @@ class CdExecutorTest {
 
     private var executor: CmdExecutor? = null
 
-    private var testFile: File? = null
-    private var testSubfolder: File? = null
-
     @Before
     fun setUp() {
         /*

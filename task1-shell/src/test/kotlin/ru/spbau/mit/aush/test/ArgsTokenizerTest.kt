@@ -36,7 +36,7 @@ class ArgsTokenizerTest(val str: String,
     @Test fun testParse() {
         val tokenizer = ArgsTokenizer(str)
         val actualParse = tokenizer.tokenize()
-        print(actualParse)
+//        print(actualParse)
         Assert.assertArrayEquals(expectedSplit.toTypedArray(), actualParse.toTypedArray())
     }
 }

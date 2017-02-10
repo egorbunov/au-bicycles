@@ -41,7 +41,7 @@ class LsExecutor  : CmdExecutor() {
         val result = ArrayList<String>()
 
         if (Files.isDirectory(targetDir)) {
-            Files.list(targetDir).forEach { x -> result.add(targetDir.relativize(x).toString()) }
+            Files.list(targetDir).sorted().forEach { x -> result.add(targetDir.relativize(x).toString()) }
         } else {
             result.add(targetDir.toString())
         }
