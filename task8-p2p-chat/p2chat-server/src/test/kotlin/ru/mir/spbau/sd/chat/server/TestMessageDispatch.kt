@@ -5,7 +5,7 @@ import com.nhaarman.mockito_kotlin.doThrow
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import org.junit.Test
-import ru.mit.spbau.sd.chat.commons.P2SMessageConstructor
+import ru.mit.spbau.sd.chat.commons.*
 import ru.mit.spbau.sd.chat.commons.net.AsyncServer
 import ru.mit.spbau.sd.chat.server.net.PeerEventHandler
 import ru.mit.spbau.sd.chat.server.net.PeersSessionController
@@ -20,32 +20,32 @@ class TestMessageDispatch {
     fun testMessageDispatch() {
         val msgListener: PeerEventHandler<ChatUserIpAddr> = mock()
         val dispatcher = PeersSessionController(msgListener)
-        val p2sMsgBuilder = P2SMessageConstructor("1.1.1.1", 42)
+        val userId = ChatUserIpAddr.newBuilder().setIp("1.1.1.1").setPort(42).build()!!
         val attachment: AsyncServer<PeerToServerMsg, ServerToPeerMsg> = mock {
             onGeneric { writeMessage(any()) } doThrow RuntimeException()
             on { destroy() } doThrow RuntimeException()
         }
 
-        dispatcher.messageReceived(p2sMsgBuilder.connectMsg(), attachment)
+        dispatcher.messageReceived(p2sConnectMsg(userId), attachment)
 
         try {
-            dispatcher.messageReceived(p2sMsgBuilder.availableUsersRequestMsg(), attachment)
+            dispatcher.messageReceived(p2sAvailableUsersRequestMsg(), attachment)
         } catch (e: Exception) {
         }
         verify(msgListener).usersRequested()
 
         val userInfo = ChatUserInfo.newBuilder().setName("George").build()
-        dispatcher.messageReceived(p2sMsgBuilder.myInfoChangedMsg(userInfo), attachment)
-        verify(msgListener).peerChangedInfo(userId = p2sMsgBuilder.userId, newInfo = userInfo)
+        dispatcher.messageReceived(p2sMyInfoChangedMsg(userInfo), attachment)
+        verify(msgListener).peerChangedInfo(userId = userId, newInfo = userInfo)
 
-        dispatcher.messageReceived(p2sMsgBuilder.peerGoneOfflineMsg(), attachment)
-        verify(msgListener).peerGoneOffline(userId = p2sMsgBuilder.userId)
+        dispatcher.messageReceived(p2sPeerGoneOfflineMsg(), attachment)
+        verify(msgListener).peerGoneOffline(userId = userId)
 
-        dispatcher.messageReceived(p2sMsgBuilder.peerOnlineMsg(userInfo), attachment)
-        verify(msgListener).peerBecomeOnline(userId = p2sMsgBuilder.userId, userInfo = userInfo)
+        dispatcher.messageReceived(p2sPeerOnlineMsg(userInfo), attachment)
+        verify(msgListener).peerBecomeOnline(userId = userId, userInfo = userInfo)
 
         try {
-            dispatcher.messageReceived(p2sMsgBuilder.disconnectMsg(), attachment)
+            dispatcher.messageReceived(p2sDisconnectMsg(), attachment)
         } catch (e: RuntimeException) {}
         verify(attachment).destroy()
     }

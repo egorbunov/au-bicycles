@@ -18,7 +18,6 @@ class ChatModel<T>(
         private val usersMap: AbstractMap<T, ChatUserInfo>
 ) {
     private val usersMsgBoxes = HashMap<T, MutableList<ChatMessage>>()
-    private val listeners = ArrayList<ChatModelChangeListener<T>>()
 
     private fun createEmptyMsgBox(): MutableList<ChatMessage> {
         return ArrayList()
@@ -40,7 +39,6 @@ class ChatModel<T>(
 
         usersMap[userId] = userInfo
         usersMsgBoxes[userId] = createEmptyMsgBox()
-        listeners.forEach { it.newUserAdded(userId, userInfo) }
     }
 
     /**
@@ -52,7 +50,6 @@ class ChatModel<T>(
         }
 
         usersMap.remove(userId)
-        listeners.forEach { it.userRemoved(userId) }
     }
 
     /**
@@ -64,7 +61,6 @@ class ChatModel<T>(
         }
 
         usersMap[userId] = newUserInfo
-        listeners.forEach { it.userChanged(userId, newUserInfo) }
     }
 
     /**
@@ -82,7 +78,6 @@ class ChatModel<T>(
             throw ChatUserDoesNotExists("$recipient")
         }
         usersMsgBoxes[recipient]!!.add(message)
-        listeners.forEach { it.messageSent(recipient, message) }
     }
 
     /**
@@ -93,7 +88,6 @@ class ChatModel<T>(
             throw ChatUserDoesNotExists("$sender")
         }
         usersMsgBoxes[sender]!!.add(message)
-        listeners.forEach { it.messageReceived(sender, message) }
     }
 
     /**
@@ -111,9 +105,5 @@ class ChatModel<T>(
      */
     fun changeClientInfo(newInfo: ChatUserInfo) {
         clientInfo = newInfo
-        listeners.forEach { it.currentClientInfoChanged(newInfo) }
     }
-
-    fun addListener(listener: ChatModelChangeListener<T>) = listeners.add(listener)
-    fun removeListener(listener: ChatModelChangeListener<T>) = listeners.remove(listener)
 }

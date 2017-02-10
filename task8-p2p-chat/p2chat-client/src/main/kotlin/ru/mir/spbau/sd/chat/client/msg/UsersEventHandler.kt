@@ -7,7 +7,7 @@ import ru.spbau.mit.sd.commons.proto.ChatUserInfo
  * Listener for all protocol-specific chat events, which may arrive
  * from network.
  */
-interface NetChatListener <in T> {
+interface UsersEventHandler<in T> {
     fun userBecomeOnline(userId: T, userInfo: ChatUserInfo)
     fun userGoneOffline(userId: T)
     fun userChangeInfo(userId: T, newInfo: ChatUserInfo)

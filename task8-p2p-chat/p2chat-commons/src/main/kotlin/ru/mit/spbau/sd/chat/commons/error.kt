@@ -1,3 +1,3 @@
-package ru.mit.spbau.sd.chat.server.net
+package ru.mit.spbau.sd.chat.commons
 
 class ProtocolViolation(msg: String): IllegalStateException(msg)

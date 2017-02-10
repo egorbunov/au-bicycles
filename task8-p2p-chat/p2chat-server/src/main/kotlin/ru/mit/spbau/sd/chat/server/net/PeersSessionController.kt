@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.server.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.commons.ProtocolViolation
 import ru.mit.spbau.sd.chat.commons.listToUsersList
 import ru.mit.spbau.sd.chat.commons.net.*
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
