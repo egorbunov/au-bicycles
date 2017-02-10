@@ -15,7 +15,7 @@ class PWDExecutor : CmdExecutor() {
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         val writer = outStream.bufferedWriter()
-        writer.write(AushContext.instance.getVar(SpecialVars.PWD.name))
+        writer.write(AushContext.instance.getVar(SpecialVars.PWD))
         writer.newLine()
         writer.flush()
         return 0

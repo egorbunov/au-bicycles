@@ -34,7 +34,7 @@ class CdExecutor : CmdExecutor() {
             logger.info("Using absolute path to cd")
             cd(newDir)
         } else {
-            val currentDir = Paths.get(System.getenv(SpecialVars.PWD.name))
+            val currentDir = Paths.get(AushContext.instance.getVar(SpecialVars.PWD))
             val relativeDir = currentDir.resolve(newDir)
             if (isValidDir(relativeDir)) {
                 logger.info("Using relative path to cd")
@@ -52,7 +52,7 @@ class CdExecutor : CmdExecutor() {
     }
 
     private fun cd(dir: Path) {
-        val absolutePath = dir.toAbsolutePath().toString()
+        val absolutePath = dir.toAbsolutePath().normalize().toString()
         AushContext.instance.addVar(SpecialVars.PWD.name, absolutePath)
         logger.info("Changed directory to $absolutePath")
     }

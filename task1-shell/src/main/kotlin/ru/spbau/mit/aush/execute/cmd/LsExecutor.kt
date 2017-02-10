@@ -26,7 +26,7 @@ class LsExecutor  : CmdExecutor() {
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
         val target = if (args.isEmpty()) {
-            AushContext.instance.getVar(SpecialVars.PWD.name)
+            AushContext.instance.getVar(SpecialVars.PWD)
         } else if (args.size == 1) {
             args.first()
         } else {

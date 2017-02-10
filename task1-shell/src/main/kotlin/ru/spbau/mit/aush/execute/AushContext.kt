@@ -32,6 +32,14 @@ class AushContext private constructor() {
     }
 
     /**
+     * Add new variable binding.
+     * If there were variable with given name it's value will be overwritten
+     */
+    fun addVar(specialVar: SpecialVars, value: String) {
+        addVar(specialVar.name, value)
+    }
+
+    /**
      * Returns all variable bindings
      */
     fun getVars(): List<Pair<String, String>> {
@@ -43,6 +51,13 @@ class AushContext private constructor() {
      */
     fun getVar(name: String): String? {
         return vars[name]
+    }
+
+    /**
+     * Returns particular variable binding, in case of no such variable null is returned
+     */
+    fun getVar(specialVar: SpecialVars): String? {
+        return vars[specialVar.name]
     }
 
     fun setExitCode(code: Int) {
