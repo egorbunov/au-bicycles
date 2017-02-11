@@ -43,7 +43,7 @@ internal class ChatNetworkShield(
      */
     override fun startClient() {
         val usersList = chatServerService.startChatting().get()
-        for ((userId) in usersList.filter { it.first != clientId }) {
+        for ((userId) in usersList) {
             usersConnectionsInterface.connectToUser(
                     userId,
                     onComplete = { server ->
@@ -61,7 +61,7 @@ internal class ChatNetworkShield(
     override fun stopClient() {
         chatServerService.stopChatting()
         val users = chatServerService.getUsers().get()
-        for ((userId) in users.filter { it.first != clientId }) {
+        for ((userId) in users) {
             usersConnectionsInterface.connectToUser(
                     userId,
                     onComplete = { server ->
