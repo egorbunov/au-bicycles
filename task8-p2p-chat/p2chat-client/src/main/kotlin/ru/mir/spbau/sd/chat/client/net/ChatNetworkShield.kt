@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import ru.mir.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mit.spbau.sd.chat.commons.p2pIAmGoneOfflineMsg
 import ru.mit.spbau.sd.chat.commons.p2pIAmOnlineMsg
+import ru.mit.spbau.sd.chat.commons.p2pMyInfoChangedMsg
 import ru.mit.spbau.sd.chat.commons.p2pTextMessageMsg
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
@@ -91,5 +92,19 @@ internal class ChatNetworkShield(
     override fun changeClientInfo(newInfo: ChatUserInfo) {
         chatServerService.changeClientInfo(newInfo)
         clientInfo = newInfo
+        val users = chatServerService.getUsers().get()
+        for ((userId) in users) {
+            usersConnectionsInterface.connectToUser(
+                    userId,
+                    onComplete = { server ->
+                        server.writeMessage(p2pMyInfoChangedMsg(clientInfo))
+                        usersConnectionsInterface.disconnectUser(userId)
+                    },
+                    onFail = {
+                        logger.error("User $userId connect failed: $it")
+                    }
+            )
+        }
+        listeners.forEach { it.clientChangedInfo(clientInfo) }
     }
 }
