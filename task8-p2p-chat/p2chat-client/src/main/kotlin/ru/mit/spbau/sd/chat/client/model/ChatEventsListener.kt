@@ -1,4 +1,4 @@
-package ru.mir.spbau.sd.chat.client.model
+package ru.mit.spbau.sd.chat.client.model
 
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
@@ -6,17 +6,17 @@ import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 /**
  * Model listener interface, which is triggered by `ChatModel`
  */
-interface ChatModelChangeListener <T> {
+interface ChatEventsListener<in T> {
     /**
      * Triggered in case new user added to chat model; This event
      * has meaning: user become online
      */
-    fun newUserAdded(userId: T, userInfo: ChatUserInfo)
+    fun userBecomeOnline(userId: T, userInfo: ChatUserInfo)
 
     /**
      * Triggered in case user gone offline (deleted from model)
      */
-    fun userRemoved(userId: T)
+    fun userGoneOffline(userId: T)
 
     /**
      * Triggered if user information has changed

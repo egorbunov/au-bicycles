@@ -1,4 +1,4 @@
-package ru.mir.spbau.sd.chat.client.net
+package ru.mit.spbau.sd.chat.client.net
 
 import ru.mit.spbau.sd.chat.commons.net.AsyncServer
 import ru.mit.spbau.sd.chat.commons.net.asyncConnect
@@ -10,7 +10,10 @@ import java.nio.channels.AsynchronousSocketChannel
 /**
  * Interface to all chat client connections to other users
  */
-internal class UsersConnectionsInterface(private val sessionsController: UsersSessionsController) {
+internal class UsersConnectionsInterface(
+        private val sessionsController: UsersSessionsController,
+        private val userConnectionCreator: UserConnectionCreator
+) {
 
     /**
      * Asynchronously establishes connection with user specified by given `userId`.
@@ -31,7 +34,7 @@ internal class UsersConnectionsInterface(private val sessionsController: UsersSe
         asyncConnect(
                 userIpToSockAddr(userId),
                 onComplete = { channel: AsynchronousSocketChannel ->
-                    val userServer = sessionsController.initNewUserConnection(userId, channel)
+                    val userServer = userConnectionCreator.initiateConnectionByThisClient(userId, channel)
                     onComplete(userServer)
                 },
                 onFail = onFail

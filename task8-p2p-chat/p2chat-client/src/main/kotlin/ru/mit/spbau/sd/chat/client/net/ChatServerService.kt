@@ -1,4 +1,4 @@
-package ru.mir.spbau.sd.chat.client.net
+package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.commons.*

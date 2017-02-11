@@ -1,7 +1,7 @@
-package ru.mir.spbau.sd.chat.client.net
+package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
-import ru.mir.spbau.sd.chat.client.msg.ClientLifecycleListener
+import ru.mit.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mit.spbau.sd.chat.commons.p2pIAmGoneOfflineMsg
 import ru.mit.spbau.sd.chat.commons.p2pIAmOnlineMsg
 import ru.mit.spbau.sd.chat.commons.p2pMyInfoChangedMsg
@@ -14,9 +14,7 @@ import java.util.*
 /**
  * ChatNetworkInterface implementation
  */
-internal class ChatNetworkShield(
-        private val clientId: ChatUserIpAddr,
-        private var clientInfo: ChatUserInfo,
+internal open class ChatNetworkShield(
         private val chatServerService: ChatServerService,
         private val usersConnectionsInterface: UsersConnectionsInterface) :
         ChatNetworkInterface {
@@ -42,7 +40,7 @@ internal class ChatNetworkShield(
     /**
      * Sending "I'am online" message to server and to
      */
-    override fun startClient() {
+    override fun startClient(clientInfo: ChatUserInfo) {
         val usersList = chatServerService.startChatting().get()
         for ((userId) in usersList) {
             usersConnectionsInterface.connectToUser(
@@ -91,13 +89,12 @@ internal class ChatNetworkShield(
 
     override fun changeClientInfo(newInfo: ChatUserInfo) {
         chatServerService.changeClientInfo(newInfo)
-        clientInfo = newInfo
         val users = chatServerService.getUsers().get()
         for ((userId) in users) {
             usersConnectionsInterface.connectToUser(
                     userId,
                     onComplete = { server ->
-                        server.writeMessage(p2pMyInfoChangedMsg(clientInfo))
+                        server.writeMessage(p2pMyInfoChangedMsg(newInfo))
                         usersConnectionsInterface.disconnectUser(userId)
                     },
                     onFail = {
@@ -105,6 +102,5 @@ internal class ChatNetworkShield(
                     }
             )
         }
-        listeners.forEach { it.clientChangedInfo(clientInfo) }
     }
 }

@@ -1,7 +1,7 @@
-package ru.mir.spbau.sd.chat.client.net
+package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
-import ru.mir.spbau.sd.chat.client.msg.UsersEventHandler
+import ru.mit.spbau.sd.chat.client.msg.UsersNetEventHandler
 import ru.mit.spbau.sd.chat.commons.ProtocolViolation
 import ru.mit.spbau.sd.chat.commons.net.*
 import ru.mit.spbau.sd.chat.commons.p2pConnectMsg
@@ -18,34 +18,19 @@ internal class UsersSessionsController(
         val currentClientId: ChatUserIpAddr
 ) :
         MessageListener<PeerToPeerMsg, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>,
-        AsyncConnectionListener {
+        UserSessionCaretaker {
+
     companion object {
         val logger = LoggerFactory.getLogger(UsersSessionsController::class.java)!!
     }
     private val users = ArrayList<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
     private val userIdMap = HashMap<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>, ChatUserIpAddr>()
     private val idUserMap = HashMap<ChatUserIpAddr, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
-    private val usersEventHandlers = ArrayList<UsersEventHandler<ChatUserIpAddr>>()
+    private val usersEventHandlers = ArrayList<UsersNetEventHandler<ChatUserIpAddr>>()
 
-    private fun createNewUserServer(channel: AsynchronousSocketChannel): AsyncServer<PeerToPeerMsg, PeerToPeerMsg> {        // creating session - async. single connection server for exact one user
-        // creating session - async. single connection server for exact one user
-        return AsyncServer(
-                channel = channel,
-                createReadingState = { createStartReadingState { PeerToPeerMsg.parseFrom(it) } },
-                createWritingState = { createStartWritingState(it.toByteArray()) },
-                messageListener = this
-        )
-    }
-
-    fun addUsersEventHandler(handler: UsersEventHandler<ChatUserIpAddr>) {
+    fun addUsersEventHandler(handler: UsersNetEventHandler<ChatUserIpAddr>) {
         usersEventHandlers.add(handler)
     }
-
-    override fun connectionEstablished(channel: AsynchronousSocketChannel) {
-        logger.debug("New connection established with peer!")
-        users.add(createNewUserServer(channel))
-    }
-
 
     override fun messageReceived(msg: PeerToPeerMsg,
                                  attachment: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
@@ -121,19 +106,17 @@ internal class UsersSessionsController(
         destroyConnection(idUserMap[userId]!!)
     }
 
-    /**
-     * Initiates new user-user session
-     *
-     * @param userId id of the user, with which we want to initiate new session
-     * @param conn channel, representing user-user connection
-     */
-    fun initNewUserConnection(userId: ChatUserIpAddr,
-                              conn: AsynchronousSocketChannel): AsyncServer<PeerToPeerMsg, PeerToPeerMsg> {
-        val userServer = createNewUserServer(conn)
-        userServer.writeMessage(p2pConnectMsg(currentClientId))
-        userIdMap[userServer] = userId
-        idUserMap[userId] = userServer
-        return userServer
+    override fun setupThisClientInitiatedConnection(userId: ChatUserIpAddr,
+                                                    userConn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
+        userConn.start()
+        userConn.writeMessage(p2pConnectMsg(currentClientId))
+        userIdMap[userConn] = userId
+        idUserMap[userId] = userConn
+    }
+
+    override fun setupRemotelyInitiatedConnection(userConn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
+        userConn.start()
+        users.add(userConn)
     }
 
     /**

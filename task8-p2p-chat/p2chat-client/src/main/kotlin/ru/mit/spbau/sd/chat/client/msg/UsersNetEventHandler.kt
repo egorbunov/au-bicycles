@@ -1,4 +1,4 @@
-package ru.mir.spbau.sd.chat.client.msg
+package ru.mit.spbau.sd.chat.client.msg
 
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
@@ -7,7 +7,7 @@ import ru.spbau.mit.sd.commons.proto.ChatUserInfo
  * Listener for all protocol-specific chat events, which may arrive
  * from network.
  */
-interface UsersEventHandler<in T> {
+interface UsersNetEventHandler<in T> {
     fun userBecomeOnline(userId: T, userInfo: ChatUserInfo)
     fun userGoneOffline(userId: T)
     fun userChangeInfo(userId: T, newInfo: ChatUserInfo)

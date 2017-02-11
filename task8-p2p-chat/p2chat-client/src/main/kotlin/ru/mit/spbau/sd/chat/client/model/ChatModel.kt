@@ -1,10 +1,11 @@
-package ru.mir.spbau.sd.chat.client.model
+package ru.mit.spbau.sd.chat.client.model
 
-import ru.mir.spbau.sd.chat.client.ChatUserAlreadyExists
-import ru.mir.spbau.sd.chat.client.ChatUserDoesNotExists
+import ru.mit.spbau.sd.chat.client.ChatUserAlreadyExists
+import ru.mit.spbau.sd.chat.client.ChatUserDoesNotExists
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Chat data holder.
@@ -13,18 +14,20 @@ import java.util.*
  *     2. Message box for each online user
  */
 class ChatModel<T>(
-        private val clientId: T,
-        private var clientInfo: ChatUserInfo,
-        private val usersMap: AbstractMap<T, ChatUserInfo>
+        val clientId: T,
+        var clientInfo: ChatUserInfo
 ) {
-    private val usersMsgBoxes = HashMap<T, MutableList<ChatMessage>>()
+    private val usersMsgBoxes: MutableMap<T, MutableList<Pair<T, ChatMessage>>> = ConcurrentHashMap()
+    private val usersMap: MutableMap<T, ChatUserInfo> = ConcurrentHashMap()
 
-    private fun createEmptyMsgBox(): MutableList<ChatMessage> {
+
+
+    private fun createEmptyMsgBox(): MutableList<Pair<T, ChatMessage>> {
         return ArrayList()
     }
 
     init {
-        for ((userId) in usersMap) {
+        for (userId in usersMap.keys) {
             usersMsgBoxes[userId] = createEmptyMsgBox()
         }
     }
@@ -41,6 +44,10 @@ class ChatModel<T>(
         usersMsgBoxes[userId] = createEmptyMsgBox()
     }
 
+    fun getUserInfo(userId: T): ChatUserInfo? {
+        return usersMap[userId]
+    }
+
     /**
      * Remove user from client chat
      */
@@ -48,8 +55,8 @@ class ChatModel<T>(
         if (userId !in usersMap) {
             throw ChatUserDoesNotExists("$userId")
         }
-
         usersMap.remove(userId)
+        usersMsgBoxes.remove(userId)
     }
 
     /**
@@ -73,27 +80,27 @@ class ChatModel<T>(
     /**
      * "Sent" message to recipient
      */
-    fun addMessageTo(recipient: T, message: ChatMessage) {
+    fun addMessageSentByThisUser(recipient: T, message: ChatMessage) {
         if (recipient !in usersMap) {
             throw ChatUserDoesNotExists("$recipient")
         }
-        usersMsgBoxes[recipient]!!.add(message)
+        usersMsgBoxes[recipient]!!.add(Pair(clientId, message))
     }
 
     /**
      * "Receive" message from sender
      */
-    fun addMessageFrom(sender: T, message: ChatMessage) {
+    fun addMessageSentByOtherUser(sender: T, message: ChatMessage) {
         if (sender !in usersMap) {
             throw ChatUserDoesNotExists("$sender")
         }
-        usersMsgBoxes[sender]!!.add(message)
+        usersMsgBoxes[sender]!!.add(Pair(sender, message))
     }
 
     /**
      * Get message history with given recipient/sender
      */
-    fun getMessages(recepient: T): List<ChatMessage> {
+    fun getMessages(recepient: T): List<Pair<T, ChatMessage>> {
         if (recepient !in usersMap) {
             throw ChatUserDoesNotExists("$recepient")
         }
@@ -105,5 +112,13 @@ class ChatModel<T>(
      */
     fun changeClientInfo(newInfo: ChatUserInfo) {
         clientInfo = newInfo
+    }
+
+    /**
+     * Deletes all users and all messages
+     */
+    fun clear() {
+        usersMsgBoxes.clear()
+        usersMap.clear()
     }
 }

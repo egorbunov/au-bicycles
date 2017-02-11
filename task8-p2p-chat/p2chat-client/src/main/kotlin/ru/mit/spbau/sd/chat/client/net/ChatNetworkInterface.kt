@@ -1,4 +1,4 @@
-package ru.mir.spbau.sd.chat.client.net
+package ru.mit.spbau.sd.chat.client.net
 
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
@@ -11,7 +11,7 @@ interface ChatNetworkInterface {
     /**
      * Start client: tell chat network, that client is available for interaction
      */
-    fun startClient()
+    fun startClient(clientInfo: ChatUserInfo)
 
     /**
      * Stop client: tell chat network, that client gone offline
