@@ -13,11 +13,15 @@ import java.nio.channels.AsynchronousSocketChannel
 internal class UsersConnectionsInterface(private val sessionsController: UsersSessionsController) {
 
     /**
-     * Asynchronously performs operation on connection, after establishing this connection
+     * Asynchronously establishes connection with user specified by given `userId`.
+     *
+     * Connection may actually already be established, in such case completion handler
+     * `onComplete` will probably be evaluated faster (it will be evaluated in current
+     * thread and as part of the call to this method)
      */
-    fun connectAndPerform(userId: ChatUserIpAddr,
-                          onComplete: (AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) -> Unit,
-                          onFail: (Throwable?) -> Unit) {
+    fun connectToUser(userId: ChatUserIpAddr,
+                      onComplete: (AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) -> Unit,
+                      onFail: (Throwable?) -> Unit) {
         val userConnection = sessionsController.getOneUserConnection(userId)
         if (userConnection != null) {
             onComplete(userConnection)
@@ -27,9 +31,25 @@ internal class UsersConnectionsInterface(private val sessionsController: UsersSe
         asyncConnect(
                 userIpToSockAddr(userId),
                 onComplete = { channel: AsynchronousSocketChannel ->
-                    val userServer = sessionsController.initiateNewUserConnection(userId, channel)
+                    val userServer = sessionsController.initNewUserConnection(userId, channel)
                     onComplete(userServer)
                 },
-                onFail = onFail)
+                onFail = onFail
+        )
+    }
+
+    /**
+     * Returns all currently established connections
+     */
+    fun getAllEstablishedConnections(): List<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>> {
+        return sessionsController.getAllUsersConnections()
+    }
+
+    /**
+     * Destroys connection with user, which has given `userId`, if connection exists,
+     * otherwise it does nothing.
+     */
+    fun disconnectUser(userId: ChatUserIpAddr) {
+        sessionsController.destroyConnection(userId)
     }
 }

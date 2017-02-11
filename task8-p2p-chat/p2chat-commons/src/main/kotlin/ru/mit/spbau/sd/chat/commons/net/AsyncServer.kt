@@ -2,9 +2,11 @@ package ru.mit.spbau.sd.chat.commons.net
 
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.commons.limit
-import ru.mit.spbau.sd.chat.commons.net.state.*
+import ru.mit.spbau.sd.chat.commons.net.state.NothingToWrite
+import ru.mit.spbau.sd.chat.commons.net.state.ReadingState
+import ru.mit.spbau.sd.chat.commons.net.state.WritingIsDone
+import ru.mit.spbau.sd.chat.commons.net.state.WritingState
 import java.nio.channels.AsynchronousSocketChannel
-import java.nio.channels.CompletionHandler
 import java.util.*
 import java.util.concurrent.locks.ReentrantLock
 
@@ -77,29 +79,26 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
      * Starts listening for incoming messages
      */
     open fun start() {
-        channel.read(readingState.getBuffer(), null, object : CompletionHandler<Int, Nothing?> {
-            override fun completed(result: Int?, attachment: Nothing?) {
-//                logger.debug("Completing async read...")
+        initiateAsyncRead()
+    }
 
-                readingState = readingState.proceed()
-                if (readingState is MessageRead<T>) {
-                    val message = readingState.getMessage()
-                    logger.debug("Got message from channel: ${message.toString().limit(1000)}...")
-                    messageListener.messageReceived(message, this@AsyncServer)
-                    // renewing reading state, so server is again available
-                    // for new incoming messages
+    /**
+     * Starts asynchronous read, recursively (new read initiated after prev. completed)
+     */
+    private fun initiateAsyncRead() {
+        asyncRead(
+                channel,
+                readingState,
+                onComplete = { res: T ->
+                    logger.debug("Got message from channel: ${res.toString().limit(1000)}...")
+                    messageListener.messageReceived(res, this@AsyncServer)
                     readingState = createReadingState()
+                    initiateAsyncRead()
+                },
+                onFail = { e ->
+                    logger.error("Failed to complete async read: $e")
                 }
-                // subscribing again (in both cases of read and not fully read message)
-                if (channel.isOpen) {
-                    channel.read(readingState.getBuffer(), null, this)
-                }
-            }
-
-            override fun failed(exc: Throwable?, attachment: Nothing?) {
-                logger.error("Failed to complete async read: $exc")
-            }
-        })
+        )
     }
 
     /**
@@ -123,18 +122,14 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
             That means it is possible to have two concurrent `writeMessage` calls from 2 threads, because
             `messageListener`, which is invoked by read completion handler, may execute `writeMessage`.
          */
+
         writingQueueLock.lock()
         try {
             if (writingState == nothingToWriteState) {
                 assert(writingStatesQueue.isEmpty())
-
                 // nobody is writing now, so we just setting up new state and starting async. write
-
                 writingState = createWritingState(msg)
-                channel.write(
-                        writingState.getBuffer(),
-                        null,
-                        createWriteCompletionHandler(onComplete, onFail))
+                initiateAsyncWrite(onComplete, onFail)
             } else {
                 logger.debug("Messages in write queue: ${writingStatesQueue.size}")
                 writingStatesQueue.add(createWritingState(msg))
@@ -145,43 +140,38 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     }
 
     /**
-     * Creates completion handler for write operation.
+     * Starts new asynchronous write
      */
-    private fun createWriteCompletionHandler(onComplete: () -> Unit, onFail: (Throwable?) -> Unit):
-            CompletionHandler<Int, Nothing?> {
-        return object : CompletionHandler<Int, Nothing?> {
-            override fun completed(result: Int?, attachment: Nothing?) {
-//                logger.debug("Completing async write...")
-
-                writingState = writingState.proceed()
-
-                if (writingState is WritingIsDone) {
-                    logger.debug("Whole message written to channel!")
-                    onComplete()
-
-                    // acquiring lock, because we are going to work with the queue
-                    writingQueueLock.lock()
-                    try {
-                        if (writingStatesQueue.isNotEmpty()) {
-                            writingState = writingStatesQueue.remove()
-                            channel.write(writingState.getBuffer(), null, this)
-                        } else {
-                            // signalling that queue is empty
-                            writingQueueIsEmpty.signalAll()
-                            writingState = nothingToWriteState
-                        }
-                    } finally {
-                        writingQueueLock.unlock()
-                    }
-                } else {
-                    logger.debug("Buffer not fully written, starting new async write...")
-                    channel.write(writingState.getBuffer(), null, this)
+    private fun initiateAsyncWrite(onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
+        asyncWrite(channel, writingState,
+                onComplete = createWriteCompleteHandler(onComplete, onFail),
+                onFail = {
+                    logger.error("Failed to complete async. write: $it")
+                    onFail(it)
                 }
-            }
+        )
+    }
 
-            override fun failed(exc: Throwable?, attachment: Nothing?) {
-                logger.error("Failed to complete async. write: $exc")
-                onFail(exc)
+    /**
+     * Creates proper write complete handler
+     */
+    private fun createWriteCompleteHandler(onComplete: () -> Unit, onFail: (Throwable?) -> Unit): () -> Unit {
+        return {
+            logger.debug("Write completed...")
+            onComplete()
+            // acquiring lock, because we are going to work with the queue
+            writingQueueLock.lock()
+            try {
+                if (writingStatesQueue.isNotEmpty()) {
+                    writingState = writingStatesQueue.remove()
+                    initiateAsyncWrite(onComplete, onFail)
+                } else {
+                    // signalling that queue is empty
+                    writingQueueIsEmpty.signalAll()
+                    writingState = nothingToWriteState
+                }
+            } finally {
+                writingQueueLock.unlock()
             }
         }
     }

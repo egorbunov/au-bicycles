@@ -10,9 +10,10 @@ import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
  * peer with given identifier (ip, port) is now online and available
  * for conversation
  */
-fun p2pIAmOnlineMsg(): PeerToPeerMsg {
+fun p2pIAmOnlineMsg(userInfo: ChatUserInfo): PeerToPeerMsg {
     return PeerToPeerMsg.newBuilder()
             .setMsgType(PeerToPeerMsg.Type.I_AM_ONLINE)
+            .setUserInfo(userInfo)
             .build()!!
 }
 
@@ -20,10 +21,9 @@ fun p2pIAmOnlineMsg(): PeerToPeerMsg {
  * Returns constructed Peer to Peer message standing for that
  * peer, supplied in message body, is no longer available
  */
-fun p2pIAmGoneOfflineMsg(userInfo: ChatUserInfo): PeerToPeerMsg {
+fun p2pIAmGoneOfflineMsg(): PeerToPeerMsg {
     return PeerToPeerMsg.newBuilder()
             .setMsgType(PeerToPeerMsg.Type.I_AM_GONE_OFFLINE)
-            .setUserInfo(userInfo)
             .build()!!
 }
 

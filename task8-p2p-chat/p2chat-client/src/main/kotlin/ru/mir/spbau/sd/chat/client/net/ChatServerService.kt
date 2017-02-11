@@ -1,7 +1,6 @@
 package ru.mir.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
-import ru.mir.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mit.spbau.sd.chat.commons.*
 import ru.mit.spbau.sd.chat.commons.net.*
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
@@ -19,72 +18,57 @@ import java.util.concurrent.CountDownLatch
  * @param serverAddress - address of the server, which will be queried
  * @param clientId - current client id, to sent to server
  * @param clientUserInfo - current client info
- * @param clientLifecycleListener - instance, which will be notified about completion
- *        of any operation
  */
 class ChatServerService(
         val serverAddress: SocketAddress,
         private val clientId: ChatUserIpAddr,
-        private var clientUserInfo: ChatUserInfo,
-        private val clientLifecycleListener: ClientLifecycleListener) {
+        private var clientUserInfo: ChatUserInfo) {
 
     companion object {
-        val logger = LoggerFactory.getLogger(UsersSessionsController::class.java)!!
+        val logger = LoggerFactory.getLogger(ChatServerService::class.java)!!
     }
+
+
+    private val usersListCountdown = CountDownLatch(1)
+    @Volatile
+    private var lastUsersList: List<Pair<ChatUserIpAddr, ChatUserInfo>>? = null
+
 
     /**
      * Connection to server and tells it, that this client is online.
      * After it requests list of users, already available for chatting
      *
-     * @return future where `clientLifecycleListener` is supplied with initial chat users list
-     *         user can call `get()` on it to wait for this event to occur
+     * @return future, promising you the list of available chat users at the moment of
+     *         current client connection
      */
-    fun startChating(): AsyncFuture<Unit> {
-        val countdown = CountDownLatch(1)
-        val conn = asyncConnect(serverAddress).get()
-        val server = createAndStartServerSession(
-                conn,
-                object : MessageListener<ServerToPeerMsg, AsyncServer<ServerToPeerMsg, PeerToServerMsg>> {
-                    override fun messageReceived(msg: ServerToPeerMsg,
-                                                 attachment: AsyncServer<ServerToPeerMsg, PeerToServerMsg>) {
-                        when (msg.msgType!!) {
-                            ServerToPeerMsg.Type.AVAILABLE_USERS -> {
-                                clientLifecycleListener.clientStarted(usersListToList(msg.users!!))
-                                countdown.countDown()
-                            }
-                            ServerToPeerMsg.Type.UNRECOGNIZED -> {
-                                logger.error("Bad server2peer msg: bad message type")
-                                throw ProtocolViolation("Got bad message from server")
-                            }
-                        }
-                        attachment.writeMessageSync(p2sDisconnectMsg())
-                        attachment.destroy()
-                    }
-                })
-        server.writeMessage(p2sConnectMsg(clientId))
-        server.writeMessage(p2sPeerOnlineMsg(clientUserInfo))
-        server.writeMessage(p2sAvailableUsersRequestMsg())
-
-        return object: AsyncFuture<Unit> {
-            override fun get() {
-                countdown.await()
-            }
-        }
+    fun startChatting(): AsyncFuture<List<Pair<ChatUserIpAddr, ChatUserInfo>>> {
+        val channel = asyncConnect(serverAddress).get()
+        sendMsg(channel, p2sConnectMsg(clientId))
+        sendMsg(channel, p2sPeerOnlineMsg(clientUserInfo))
+        sendMsg(channel, p2sAvailableUsersRequestMsg())
+        return recvUsersAndCloseFuture(channel)
     }
+
+    /**
+     * Returns future of users list
+     */
+    fun getUsers(): AsyncFuture<List<Pair<ChatUserIpAddr, ChatUserInfo>>> {
+        val channel = asyncConnect(serverAddress).get()
+        sendMsg(channel, p2sConnectMsg(clientId))
+        sendMsg(channel, p2sAvailableUsersRequestMsg())
+        return recvUsersAndCloseFuture(channel)
+    }
+
 
     /**
      * Connects to server and tells it, that this client is offline
      */
-    fun stopChating() {
-        val conn = asyncConnect(serverAddress).get()
-        val server = createAndStartServerSession(conn, UselessMessageListener())
-        server.writeMessage(p2sConnectMsg(clientId))
-        server.writeMessage(p2sPeerGoneOfflineMsg())
-        // that is crucial for last write to be sync, because last message
-        // may be put on write queue.
-        server.writeMessageSync(p2sDisconnectMsg())
-        server.destroy()
-        clientLifecycleListener.clientStopped()
+    fun stopChatting() {
+        val channel = asyncConnect(serverAddress).get()
+        sendMsg(channel, p2sConnectMsg(clientId))
+        sendMsg(channel, p2sPeerGoneOfflineMsg())
+        sendMsg(channel, p2sDisconnectMsg()).get()
+        channel.close()
     }
 
     /**
@@ -92,26 +76,37 @@ class ChatServerService(
      */
     fun changeClientInfo(newInfo: ChatUserInfo) {
         clientUserInfo = newInfo
-        val conn = asyncConnect(serverAddress).get()
-        val server = createAndStartServerSession(conn, UselessMessageListener())
-        server.writeMessage(p2sConnectMsg(clientId))
-        server.writeMessage(p2sMyInfoChangedMsg(clientUserInfo))
-        server.writeMessageSync(p2sDisconnectMsg())
-        server.destroy()
-        clientLifecycleListener.clientChangedInfo(clientUserInfo)
+        val channel = asyncConnect(serverAddress).get()
+        sendMsg(channel, p2sConnectMsg(clientId))
+        sendMsg(channel, p2sMyInfoChangedMsg(clientUserInfo))
+        sendMsg(channel, p2sDisconnectMsg()).get()
+        channel.close()
     }
 
-    private fun createAndStartServerSession(channel: AsynchronousSocketChannel,
-                                            msgListener: MessageListener<ServerToPeerMsg,
-                                            AsyncServer<ServerToPeerMsg, PeerToServerMsg>>):
-            AsyncServer<ServerToPeerMsg, PeerToServerMsg> {
-        val session = AsyncServer(
-                channel,
-                createReadingState = { createStartReadingState { ServerToPeerMsg.parseFrom(it) } },
-                createWritingState = { createStartWritingState(it.toByteArray()) },
-                messageListener = msgListener
-        )
-        session.start()
-        return session
+    private fun recvUsersAndCloseFuture(channel: AsynchronousSocketChannel):
+            AsyncFuture<List<Pair<ChatUserIpAddr, ChatUserInfo>>> {
+        return recvMsg(channel).thenApply { msg ->
+            logger.debug("Parsing s2p message (users) and closing channel...")
+            sendMsg(channel, p2sDisconnectMsg()).get()
+            channel.close()
+            when (msg.msgType) {
+                ServerToPeerMsg.Type.AVAILABLE_USERS -> {
+                    usersListToList(msg.users!!)
+                }
+                ServerToPeerMsg.Type.UNRECOGNIZED -> {
+                    logger.error("Bad message from server, can't recv users from server")
+                    throw RuntimeException("bad server msg")
+                }
+            }
+        }
     }
+
+    private fun sendMsg(channel: AsynchronousSocketChannel, msg: PeerToServerMsg): AsyncFuture<Unit> {
+        return asyncWrite(channel, createStartWritingState(msg.toByteArray()!!))
+    }
+
+    private fun recvMsg(channel: AsynchronousSocketChannel): AsyncFuture<ServerToPeerMsg> {
+        return asyncRead(channel, createStartReadingState { ServerToPeerMsg.parseFrom(it) })
+    }
+
 }

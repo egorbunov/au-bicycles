@@ -1,12 +1,9 @@
 package ru.mit.spbau.sd.chat.test
 
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import ru.mir.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mir.spbau.sd.chat.client.net.ChatServerService
 import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.mit.spbau.sd.chat.server.ChatServer
@@ -22,7 +19,6 @@ class ClientServerServiceTest {
     val chatServer = ChatServer(0, UserMapPeerMsgListener(serverUsersMap))
     val clientId = ChatUserIpAddr.newBuilder().setIp("1.1.1.1").setPort(42).build()!!
     val clientInfo = ChatUserInfo.newBuilder().setName("Michael").build()!!
-    val clientLifecycleListener: ClientLifecycleListener = mock()
     var serverService = null as ChatServerService?
 
     @Before
@@ -31,8 +27,7 @@ class ClientServerServiceTest {
         serverService = ChatServerService(
                 chatServer.address(),
                 clientId,
-                clientInfo,
-                clientLifecycleListener
+                clientInfo
         )
     }
 
@@ -43,17 +38,19 @@ class ClientServerServiceTest {
 
     @Test
     fun testStartChatting() {
-        serverService!!.startChating().get()
-        verify(clientLifecycleListener).clientStarted(
-                usersList = listOf(Pair(clientId, clientInfo))
-        )
+        val users = serverService!!.startChatting().get()
+        Assert.assertEquals(listOf(Pair(clientId, clientInfo)), users)
         Assert.assertEquals(1, serverUsersMap.size)
+
+        val users1 = serverService!!.getUsers().get()
+        Assert.assertEquals(listOf(Pair(clientId, clientInfo)), users1)
+
     }
 
     @Test
     fun testStopChatting() {
-        serverService!!.startChating().get()
-        serverService!!.stopChating()
+        serverService!!.startChatting().get()
+        serverService!!.stopChatting()
         Thread.sleep(250)
         Assert.assertEquals(0, serverUsersMap.size)
     }
@@ -61,7 +58,7 @@ class ClientServerServiceTest {
     @Test
     fun testChangeInfo() {
         val newInfo = ChatUserInfo.newBuilder().setName("Walter").build()
-        serverService!!.startChating().get()
+        serverService!!.startChatting().get()
         serverService!!.changeClientInfo(newInfo)
         Thread.sleep(250)
         Assert.assertEquals(1, serverUsersMap.size)

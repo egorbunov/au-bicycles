@@ -15,8 +15,7 @@ import java.util.*
  * Holder and controller of all client connections to other clients
  */
 internal class UsersSessionsController(
-        val currentClientId: ChatUserIpAddr,
-        val usersEventHandler: UsersEventHandler<ChatUserIpAddr>
+        val currentClientId: ChatUserIpAddr
 ) :
         MessageListener<PeerToPeerMsg, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>,
         AsyncConnectionListener {
@@ -26,6 +25,7 @@ internal class UsersSessionsController(
     private val users = ArrayList<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
     private val userIdMap = HashMap<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>, ChatUserIpAddr>()
     private val idUserMap = HashMap<ChatUserIpAddr, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
+    private val usersEventHandlers = ArrayList<UsersEventHandler<ChatUserIpAddr>>()
 
     private fun createNewUserServer(channel: AsynchronousSocketChannel): AsyncServer<PeerToPeerMsg, PeerToPeerMsg> {        // creating session - async. single connection server for exact one user
         // creating session - async. single connection server for exact one user
@@ -35,6 +35,10 @@ internal class UsersSessionsController(
                 createWritingState = { createStartWritingState(it.toByteArray()) },
                 messageListener = this
         )
+    }
+
+    fun addUsersEventHandler(handler: UsersEventHandler<ChatUserIpAddr>) {
+        usersEventHandlers.add(handler)
     }
 
     override fun connectionEstablished(channel: AsynchronousSocketChannel) {
@@ -59,19 +63,19 @@ internal class UsersSessionsController(
             }
             PeerToPeerMsg.Type.I_AM_ONLINE -> {
                 val peerId = checkClientConnected(attachment)
-                usersEventHandler.userBecomeOnline(peerId, msg.userInfo!!)
+                usersEventHandlers.forEach { it.userBecomeOnline(peerId, msg.userInfo!!) }
             }
             PeerToPeerMsg.Type.MY_INFO_CHANGED -> {
                 val peerId = checkClientConnected(attachment)
-                usersEventHandler.userChangeInfo(peerId, msg.userInfo!!)
+                usersEventHandlers.forEach { it.userChangeInfo(peerId, msg.userInfo!!) }
             }
             PeerToPeerMsg.Type.I_AM_GONE_OFFLINE -> {
                 val peerId = checkClientConnected(attachment)
-                usersEventHandler.userGoneOffline(peerId)
+                usersEventHandlers.forEach { it.userGoneOffline(peerId) }
             }
             PeerToPeerMsg.Type.TEXT_MESSAGE -> {
                 val peerId = checkClientConnected(attachment)
-                usersEventHandler.userSentMessage(peerId, msg.message!!)
+                usersEventHandlers.forEach { it.userSentMessage(peerId, msg.message!!) }
             }
             PeerToPeerMsg.Type.UNRECOGNIZED -> {
                 logger.error("Bad [peer->peer] message type!")
@@ -86,9 +90,8 @@ internal class UsersSessionsController(
         conn.writeMessage(p2pDisconnectMsg(),
                 onComplete = { conn.destroy() },
                 onFail = { e->
-                    logger.error("Failed to destroy user connection: $e")
+                    logger.error("Failed to destroy user connection [disconnect msg. sending failed]: $e")
                 })
-        conn.destroy()
     }
 
     /**
@@ -104,14 +107,28 @@ internal class UsersSessionsController(
         return idUserMap[userId]
     }
 
+    fun getAllUsersConnections(): List<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>> {
+        return users
+    }
+
+    /**
+     * Destroys connection with user specified by it's id, if connection exists
+     */
+    fun destroyConnection(userId: ChatUserIpAddr) {
+        if (userId !in idUserMap) {
+            return
+        }
+        destroyConnection(idUserMap[userId]!!)
+    }
+
     /**
      * Initiates new user-user session
      *
      * @param userId id of the user, with which we want to initiate new session
      * @param conn channel, representing user-user connection
      */
-    fun initiateNewUserConnection(userId: ChatUserIpAddr,
-                                  conn: AsynchronousSocketChannel): AsyncServer<PeerToPeerMsg, PeerToPeerMsg> {
+    fun initNewUserConnection(userId: ChatUserIpAddr,
+                              conn: AsynchronousSocketChannel): AsyncServer<PeerToPeerMsg, PeerToPeerMsg> {
         val userServer = createNewUserServer(conn)
         userServer.writeMessage(p2pConnectMsg(currentClientId))
         userIdMap[userServer] = userId
