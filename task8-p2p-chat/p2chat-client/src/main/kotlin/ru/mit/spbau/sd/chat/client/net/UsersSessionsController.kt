@@ -6,6 +6,7 @@ import ru.mit.spbau.sd.chat.commons.ProtocolViolation
 import ru.mit.spbau.sd.chat.commons.net.AsyncServer
 import ru.mit.spbau.sd.chat.commons.net.MessageListener
 import ru.mit.spbau.sd.chat.commons.p2pConnectMsg
+import ru.mit.spbau.sd.chat.commons.p2pConnectOkMsg
 import ru.mit.spbau.sd.chat.commons.p2pDisconnectMsg
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
@@ -46,6 +47,7 @@ internal class UsersSessionsController(
                     throw ProtocolViolation("Client is already connected [protocol violation]")
                 }
                 if (id in idUserMap.keys) {
+                    // I'm not sure this can happen TODO: check
                     val oldUser = idUserMap[id]
                     if (oldUser != null) {
                         userIdMap.remove(oldUser)
@@ -54,7 +56,11 @@ internal class UsersSessionsController(
                 }
                 userIdMap[attachment] = id
                 idUserMap[id] = attachment
-                logger.debug("User added...")
+                logger.debug("User added; Sending CONNECT_OK signal")
+                attachment.writeMessageSync(p2pConnectOkMsg())
+            }
+            PeerToPeerMsg.Type.CONNECT_OK -> {
+                logger.debug("Got connect ok message; Doing nothing...")
             }
             PeerToPeerMsg.Type.DISCONNECT -> {
                 logger.debug("Got DISCONNECT message")
@@ -83,7 +89,7 @@ internal class UsersSessionsController(
         }
     }
 
-    private fun destroyConnection(conn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
+    fun destroyConnection(conn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
         users.remove(conn)
         idUserMap.remove(userIdMap[conn])
         userIdMap.remove(conn)
@@ -122,16 +128,6 @@ internal class UsersSessionsController(
         return users.toList()
     }
 
-    /**
-     * Destroys connection with user specified by it's id, if connection exists
-     */
-    fun destroyConnection(userId: ChatUserIpAddr) {
-        if (userId !in idUserMap.keys) {
-            return
-        }
-        destroyConnection(idUserMap[userId]!!)
-    }
-
     override fun setupThisClientInitiatedConnection(userId: ChatUserIpAddr,
                                                     userConn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
         if (userConn in users) {
@@ -140,8 +136,14 @@ internal class UsersSessionsController(
         if (userId in idUserMap.keys) {
             throw IllegalStateException("Session for user $userId already exists")
         }
-        userConn.startReading()
         userConn.writeMessage(p2pConnectMsg(currentClientId))
+        logger.debug("Sent connect message; Now waiting for CONNECT_OK...")
+        val ans = userConn.asyncRead().get()
+        if (ans.msgType != PeerToPeerMsg.Type.CONNECT_OK) {
+            throw IllegalStateException("Got bad message from peer instead of CONNECT_OK signal")
+        }
+        logger.debug("Got connect ok; Starting one peer server to listen for async. reads...")
+        userConn.startReading()
         users.add(userConn)
         userIdMap[userConn] = userId
         idUserMap[userId] = userConn

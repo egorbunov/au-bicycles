@@ -67,3 +67,10 @@ fun p2pDisconnectMsg(): PeerToPeerMsg {
             .setMsgType(PeerToPeerMsg.Type.DISCONNECT)
             .build()
 }
+
+
+fun p2pConnectOkMsg(): PeerToPeerMsg {
+    return PeerToPeerMsg.newBuilder()
+            .setMsgType(PeerToPeerMsg.Type.CONNECT_OK)
+            .build()
+}

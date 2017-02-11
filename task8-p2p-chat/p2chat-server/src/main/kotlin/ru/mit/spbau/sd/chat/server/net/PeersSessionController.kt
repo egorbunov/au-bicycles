@@ -50,6 +50,11 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
                 }
                 peersIdMap[attachment] = msg.userId!!
                 idPeersMap[msg.userId!!] = attachment
+                attachment.writeMessageSync(
+                        ServerToPeerMsg.newBuilder()
+                                .setMsgType(ServerToPeerMsg.Type.CONNECT_OK)
+                                .build()
+                )
             }
             PeerToServerMsg.Type.DISCONNECT -> {
                 checkClientConnected(attachment)

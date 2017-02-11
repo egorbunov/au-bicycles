@@ -48,11 +48,7 @@ internal class UsersConnectionsInterface(
         return sessionsController.getAllUsersConnections()
     }
 
-    /**
-     * Destroys connection with user, which has given `userId`, if connection exists,
-     * otherwise it does nothing.
-     */
-    fun disconnectUser(userId: ChatUserIpAddr) {
-        sessionsController.destroyConnection(userId)
+    fun disconnectUser(user: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
+        sessionsController.destroyConnection(user)
     }
 }

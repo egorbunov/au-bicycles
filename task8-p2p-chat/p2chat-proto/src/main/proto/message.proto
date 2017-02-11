@@ -47,6 +47,7 @@ message PeerToServerMsg {
 message ServerToPeerMsg {
     enum Type {
         AVAILABLE_USERS = 0;   // answer to GET_USERS request from peer
+        CONNECT_OK = 1; // Answer to peer's CONNECT message
     }
 
     Type msgType = 1;
@@ -62,6 +63,7 @@ message PeerToPeerMsg {
         I_AM_ONLINE = 3;
         I_AM_GONE_OFFLINE = 4;
         DISCONNECT = 5;
+        CONNECT_OK = 6; // answer to CONNECT
     }
     Type msgType = 1;
     ChatMessage message = 2;

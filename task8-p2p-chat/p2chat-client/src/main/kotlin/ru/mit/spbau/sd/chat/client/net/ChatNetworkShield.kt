@@ -13,8 +13,11 @@ import java.util.*
 
 /**
  * ChatNetworkInterface implementation
+ *
+ * @param clientId - this client id; we need it to protect client from connecting to itself
  */
 internal open class ChatNetworkShield(
+        private val clientId: ChatUserIpAddr,
         private val chatServerService: ChatServerService,
         private val usersConnectionsInterface: UsersConnectionsInterface) :
         ChatNetworkInterface {
@@ -42,12 +45,12 @@ internal open class ChatNetworkShield(
      */
     override fun startClient(clientInfo: ChatUserInfo) {
         val usersList = chatServerService.startChatting().get()
-        for ((userId) in usersList) {
+        for ((userId) in usersList.filter { it.first != clientId }) {
             usersConnectionsInterface.connectToUser(
                     userId,
                     onComplete = { server ->
                         server.writeMessage(p2pIAmOnlineMsg(clientInfo))
-                        usersConnectionsInterface.disconnectUser(userId)
+                        usersConnectionsInterface.disconnectUser(server)
                     },
                     onFail = {
                         logger.error("User $userId connect failed: $it")
@@ -60,12 +63,12 @@ internal open class ChatNetworkShield(
     override fun stopClient() {
         chatServerService.stopChatting()
         val users = chatServerService.getUsers().get()
-        for ((userId) in users) {
+        for ((userId) in users.filter { it.first != clientId }) {
             usersConnectionsInterface.connectToUser(
                     userId,
                     onComplete = { server ->
                         server.writeMessage(p2pIAmGoneOfflineMsg())
-                        usersConnectionsInterface.disconnectUser(userId)
+                        usersConnectionsInterface.disconnectUser(server)
                     },
                     onFail = {
                         logger.error("User $userId connect failed: $it")
@@ -76,6 +79,9 @@ internal open class ChatNetworkShield(
     }
 
     override fun sendChatMessage(userId: ChatUserIpAddr, msg: ChatMessage) {
+        if (userId == clientId) {
+            return
+        }
         usersConnectionsInterface.connectToUser(
                 userId,
                 onComplete = { conn ->
@@ -90,12 +96,12 @@ internal open class ChatNetworkShield(
     override fun changeClientInfo(newInfo: ChatUserInfo) {
         chatServerService.changeClientInfo(newInfo)
         val users = chatServerService.getUsers().get()
-        for ((userId) in users) {
+        for ((userId) in users.filter { it.first != clientId }) {
             usersConnectionsInterface.connectToUser(
                     userId,
                     onComplete = { server ->
                         server.writeMessage(p2pMyInfoChangedMsg(newInfo))
-                        usersConnectionsInterface.disconnectUser(userId)
+                        usersConnectionsInterface.disconnectUser(server)
                     },
                     onFail = {
                         logger.error("User $userId connect failed: $it")

@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.commons.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.mit.spbau.sd.chat.commons.limit
 import ru.mit.spbau.sd.chat.commons.net.state.NothingToWrite
 import ru.mit.spbau.sd.chat.commons.net.state.ReadingState
@@ -8,6 +9,7 @@ import ru.mit.spbau.sd.chat.commons.net.state.WritingIsDone
 import ru.mit.spbau.sd.chat.commons.net.state.WritingState
 import java.nio.channels.AsynchronousSocketChannel
 import java.util.*
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.locks.ReentrantLock
 
 /**
@@ -15,6 +17,10 @@ import java.util.concurrent.locks.ReentrantLock
  * is done using `AsynchronousSocketChannel`. To setup listening for incoming messages
  * user wants to call `startReading()` method and to destroy channel (passed as constructor
  * argument) and all other server resources user wants to invoke `destroy()`.
+ *
+ * Also user can use `asyncRead(): Future<T>` before calling `startReading()` only to
+ * interact with server in more `synchronous` manner. That is made so for now, but
+ * in the Future<=)>...
  *
  * AsyncServer performs asynchronous reading/writing from/to given channel, but
  * to be reusable and generous it need to be wired with a few helpers:
@@ -71,11 +77,15 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     private val writingQueueLock = ReentrantLock()
     private val writingQueueIsEmpty = writingQueueLock.newCondition()
 
+    @Volatile
+    private var isReadingStarted = false
+
 
     /**
      * Starts listening for incoming messages
      */
     open fun startReading() {
+        isReadingStarted = true
         initiateAsyncRead()
     }
 
@@ -100,6 +110,18 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
 
     private fun <V> prepareMsg(msg: V): String {
         return msg.toString().map { if (Character.isWhitespace(it)) ' ' else it }.joinToString(separator = "").limit(1000)
+    }
+
+    /**
+     * Initiates one asynchronous read; This method will only work in case
+     * `startReading` not called.
+     */
+    fun asyncRead(): AsyncFuture<T> {
+        if (isReadingStarted) {
+            throw IllegalStateException("Can't read this way if server is already reading asynchronously " +
+                    "(startReading was called)")
+        }
+        return asyncRead(channel, createReadingState())
     }
 
     /**

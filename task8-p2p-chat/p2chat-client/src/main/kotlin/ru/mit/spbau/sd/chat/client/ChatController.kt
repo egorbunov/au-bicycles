@@ -68,9 +68,7 @@ class ChatController internal constructor(
      */
     fun changeClientInfo(newInfo: ChatUserInfo) {
         networkShield.changeClientInfo(newInfo)
-        // we do not need to change model here, because it will be changed remotely,
-        // with self-connection
-        // chatModel.changeClientInfo(newInfo)
+        chatModel.changeClientInfo(newInfo)
         modelListeners.forEach { it.currentClientInfoChanged(newInfo) }
     }
 
@@ -79,17 +77,14 @@ class ChatController internal constructor(
 
     override fun clientStarted(usersList: List<Pair<ChatUserIpAddr, ChatUserInfo>>) {
         logger.debug("Got users list on startup.")
-        // we do not add client itself to list here, because it must be added
-        // at `userBecomeOnline` callback, which came from network
-        for ((id, info) in usersList.filter { it.first != chatModel.clientId }) {
+        for ((id, info) in usersList) {
             chatModel.addUser(id, info)
             modelListeners.forEach { it.userBecomeOnline(id, info) }
         }
     }
 
     override fun clientStopped() {
-        // same logic as in `clientStarted`
-        for ((id) in chatModel.getUsers().filter { it.first != chatModel.clientId }) {
+        for ((id) in chatModel.getUsers()) {
             chatModel.removeUser(id)
             modelListeners.forEach { it.userGoneOffline(id) }
         }
@@ -97,7 +92,7 @@ class ChatController internal constructor(
 
     override fun userBecomeOnline(userId: ChatUserIpAddr, userInfo: ChatUserInfo) {
         if (userId == chatModel.clientId) {
-            logger.debug("Got become online message from from myself...")
+            logger.error("Got become online message from from myself!")
         }
         logger.debug("User become online: [${userId.ip}:${userId.port}]; name = ${userInfo.name}")
         chatModel.addUser(userId, userInfo)

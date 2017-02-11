@@ -33,6 +33,18 @@ class ChatServerService(
     @Volatile
     private var lastUsersList: List<Pair<ChatUserIpAddr, ChatUserInfo>>? = null
 
+    private fun serverConnect(): AsynchronousSocketChannel {
+        logger.debug("Connecting to chat server...")
+        val channel = asyncConnect(serverAddress).get()
+        sendMsg(channel, p2sConnectMsg(clientId))
+        logger.debug("Waiting for CONNECT approve...")
+        val ans = recvMsg(channel).get()
+        if (ans.msgType != ServerToPeerMsg.Type.CONNECT_OK) {
+            throw IllegalStateException("CONNECT OK EXPECTED")
+        }
+        logger.debug("Connected to server successfully")
+        return channel
+    }
 
     /**
      * Connection to server and tells it, that this client is online.
@@ -42,8 +54,7 @@ class ChatServerService(
      *         current client connection
      */
     fun startChatting(): AsyncFuture<List<Pair<ChatUserIpAddr, ChatUserInfo>>> {
-        val channel = asyncConnect(serverAddress).get()
-        sendMsg(channel, p2sConnectMsg(clientId))
+        val channel = serverConnect()
         sendMsg(channel, p2sPeerOnlineMsg(clientUserInfo))
         sendMsg(channel, p2sAvailableUsersRequestMsg())
         return recvUsersAndCloseFuture(channel)
@@ -53,8 +64,7 @@ class ChatServerService(
      * Returns future of users list
      */
     fun getUsers(): AsyncFuture<List<Pair<ChatUserIpAddr, ChatUserInfo>>> {
-        val channel = asyncConnect(serverAddress).get()
-        sendMsg(channel, p2sConnectMsg(clientId))
+        val channel = serverConnect()
         sendMsg(channel, p2sAvailableUsersRequestMsg())
         return recvUsersAndCloseFuture(channel)
     }
@@ -64,8 +74,7 @@ class ChatServerService(
      * Connects to server and tells it, that this client is offline
      */
     fun stopChatting() {
-        val channel = asyncConnect(serverAddress).get()
-        sendMsg(channel, p2sConnectMsg(clientId))
+        val channel = serverConnect()
         sendMsg(channel, p2sPeerGoneOfflineMsg())
         logger.debug("Sending disconnect to server...")
         sendMsg(channel, p2sDisconnectMsg()).get()
@@ -77,8 +86,7 @@ class ChatServerService(
      */
     fun changeClientInfo(newInfo: ChatUserInfo) {
         clientUserInfo = newInfo
-        val channel = asyncConnect(serverAddress).get()
-        sendMsg(channel, p2sConnectMsg(clientId))
+        val channel = serverConnect()
         sendMsg(channel, p2sMyInfoChangedMsg(clientUserInfo))
         logger.debug("Sending disconnect to server...")
         sendMsg(channel, p2sDisconnectMsg()).get()
@@ -97,6 +105,10 @@ class ChatServerService(
                 }
                 ServerToPeerMsg.Type.UNRECOGNIZED -> {
                     logger.error("Bad message from server, can't recv users from server")
+                    throw RuntimeException("bad server msg")
+                }
+                ServerToPeerMsg.Type.CONNECT_OK -> {
+                    logger.error("Bad message (CONNECT_OK) from server, can't recv users from server")
                     throw RuntimeException("bad server msg")
                 }
             }

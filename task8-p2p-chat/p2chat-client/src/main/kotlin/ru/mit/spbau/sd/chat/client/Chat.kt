@@ -43,7 +43,7 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
         sessionController = UsersSessionsController(clientId)
         val usersConnectionCreator = UserConnectionCreator(sessionController, sessionController)
         val usersConnectionsInterface = UsersConnectionsInterface(sessionController, usersConnectionCreator)
-        val networkShield = ChatNetworkShield(chatServerService, usersConnectionsInterface)
+        val networkShield = ChatNetworkShield(clientId, chatServerService, usersConnectionsInterface)
         chatModel = ChatModel(clientId, clientInfo)
 
         // main class
