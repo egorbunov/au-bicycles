@@ -1,14 +1,15 @@
 package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.client.ChatUserAlreadyExists
 import ru.mit.spbau.sd.chat.client.msg.UsersNetEventHandler
 import ru.mit.spbau.sd.chat.commons.ProtocolViolation
-import ru.mit.spbau.sd.chat.commons.net.*
+import ru.mit.spbau.sd.chat.commons.net.AsyncServer
+import ru.mit.spbau.sd.chat.commons.net.MessageListener
 import ru.mit.spbau.sd.chat.commons.p2pConnectMsg
 import ru.mit.spbau.sd.chat.commons.p2pDisconnectMsg
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
-import java.nio.channels.AsynchronousSocketChannel
 import java.util.*
 
 /**
@@ -24,8 +25,8 @@ internal class UsersSessionsController(
         val logger = LoggerFactory.getLogger(UsersSessionsController::class.java)!!
     }
     private val users = ArrayList<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
-    private val userIdMap = HashMap<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>, ChatUserIpAddr>()
-    private val idUserMap = HashMap<ChatUserIpAddr, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
+    private val userIdMap: MutableMap<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>, ChatUserIpAddr> = HashMap()
+    private val idUserMap: MutableMap<ChatUserIpAddr, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>> = HashMap()
     private val usersEventHandlers = ArrayList<UsersNetEventHandler<ChatUserIpAddr>>()
 
     fun addUsersEventHandler(handler: UsersNetEventHandler<ChatUserIpAddr>) {
@@ -73,7 +74,10 @@ internal class UsersSessionsController(
         idUserMap.remove(userIdMap[conn])
         userIdMap.remove(conn)
         conn.writeMessage(p2pDisconnectMsg(),
-                onComplete = { conn.destroy() },
+                onComplete = {
+                    logger.error("Destroying connection...")
+                    conn.destroy()
+                },
                 onFail = { e->
                     logger.error("Failed to destroy user connection [disconnect msg. sending failed]: $e")
                 })
@@ -108,14 +112,24 @@ internal class UsersSessionsController(
 
     override fun setupThisClientInitiatedConnection(userId: ChatUserIpAddr,
                                                     userConn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
-        userConn.start()
+        if (userConn in users) {
+            throw IllegalStateException("Can't add user session twice")
+        }
+        if (userId in idUserMap) {
+            throw IllegalStateException("Session for user $userId already exists")
+        }
+        userConn.startReading()
         userConn.writeMessage(p2pConnectMsg(currentClientId))
+        users.add(userConn)
         userIdMap[userConn] = userId
         idUserMap[userId] = userConn
     }
 
     override fun setupRemotelyInitiatedConnection(userConn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
-        userConn.start()
+        if (userConn in users) {
+            throw IllegalStateException("Can't add user session twice")
+        }
+        userConn.startReading()
         users.add(userConn)
     }
 

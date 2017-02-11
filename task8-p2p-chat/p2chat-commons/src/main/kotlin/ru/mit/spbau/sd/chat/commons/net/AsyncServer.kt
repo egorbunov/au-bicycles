@@ -13,7 +13,7 @@ import java.util.concurrent.locks.ReentrantLock
 /**
  * One asynchronous channel server. This class serves exact one connection, which
  * is done using `AsynchronousSocketChannel`. To setup listening for incoming messages
- * user wants to call `start()` method and to destroy channel (passed as constructor
+ * user wants to call `startReading()` method and to destroy channel (passed as constructor
  * argument) and all other server resources user wants to invoke `destroy()`.
  *
  * AsyncServer performs asynchronous reading/writing from/to given channel, but
@@ -78,7 +78,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     /**
      * Starts listening for incoming messages
      */
-    open fun start() {
+    open fun startReading() {
         initiateAsyncRead()
     }
 
@@ -186,7 +186,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     /**
      * Synchronously writing message to channel.
      * This method will wait for all pending writes to complete,
-     * and start it's own synchronous write to channel.
+     * and startReading it's own synchronous write to channel.
      *
      * So the write starts when write requests queue becomes empty.
      */

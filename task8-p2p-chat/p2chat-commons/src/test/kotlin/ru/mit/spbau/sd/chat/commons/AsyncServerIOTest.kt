@@ -83,8 +83,8 @@ class AsyncServerIOTest {
                 { str -> createStartWritingState(str.toByteArray())},
                 clientMessageListener
         )
-        serverSideConnSrv!!.start()
-        clientSideConnSrv!!.start()
+        serverSideConnSrv!!.startReading()
+        clientSideConnSrv!!.startReading()
 
         connAcceptor.destroy()
     }
