@@ -46,12 +46,9 @@ import java.util.concurrent.locks.ReentrantLock
 open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
                                 private val createReadingState: () -> ReadingState<T>,
                                 private val createWritingState: (msg: U) -> WritingState,
-                                private val messageListener: MessageListener<T, AsyncServer<T, U>>) {
-
-    companion object {
-        val logger = LoggerFactory.getLogger(AsyncServer::class.java)!!
-    }
-
+                                private val messageListener: MessageListener<T, AsyncServer<T, U>>,
+                                serverName: String = AsyncServer::class.java.name) {
+    val logger = LoggerFactory.getLogger(serverName)!!
 
     private var readingState = createReadingState()
 
@@ -90,7 +87,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
                 channel,
                 readingState,
                 onComplete = { res: T ->
-                    logger.debug("Got message from channel: ${res.toString().limit(1000)}...")
+                    logger.debug("Got message from channel: ${prepareMsg(res)}...")
                     messageListener.messageReceived(res, this@AsyncServer)
                     readingState = createReadingState()
                     initiateAsyncRead()
@@ -99,6 +96,10 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
                     logger.error("Failed to complete async read: $e")
                 }
         )
+    }
+
+    private fun <V> prepareMsg(msg: V): String {
+        return msg.toString().map { if (Character.isWhitespace(it)) ' ' else it }.joinToString(separator = "").limit(1000)
     }
 
     /**
@@ -110,7 +111,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
      * @param onFail on fail handler
      */
     open fun writeMessage(msg: U, onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
-        logger.debug("Adding message write request, message: ${msg.toString().limit(1000)}...")
+        logger.debug("Adding message write request, message: ${prepareMsg(msg)}...")
 
         /*
             I use this synchronization because it seems possible, that

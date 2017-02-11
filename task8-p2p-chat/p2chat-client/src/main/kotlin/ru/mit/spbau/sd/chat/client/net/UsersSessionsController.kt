@@ -1,7 +1,6 @@
 package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
-import ru.mit.spbau.sd.chat.client.ChatUserAlreadyExists
 import ru.mit.spbau.sd.chat.client.msg.UsersNetEventHandler
 import ru.mit.spbau.sd.chat.commons.ProtocolViolation
 import ru.mit.spbau.sd.chat.commons.net.AsyncServer
@@ -11,6 +10,7 @@ import ru.mit.spbau.sd.chat.commons.p2pDisconnectMsg
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Holder and controller of all client connections to other clients
@@ -22,11 +22,14 @@ internal class UsersSessionsController(
         UserSessionCaretaker {
 
     companion object {
-        val logger = LoggerFactory.getLogger(UsersSessionsController::class.java)!!
+        val logger = LoggerFactory.getLogger(UsersSessionsController::class.java.simpleName)!!
     }
-    private val users = ArrayList<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
-    private val userIdMap: MutableMap<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>, ChatUserIpAddr> = HashMap()
-    private val idUserMap: MutableMap<ChatUserIpAddr, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>> = HashMap()
+    // all these structures may be accessed from different threads because of asynchronous nature of this chat
+    private val users = ConcurrentHashMap.newKeySet<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>>()
+    private val userIdMap: ConcurrentHashMap<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>, ChatUserIpAddr> =
+            ConcurrentHashMap()
+    private val idUserMap: ConcurrentHashMap<ChatUserIpAddr, AsyncServer<PeerToPeerMsg, PeerToPeerMsg>> =
+            ConcurrentHashMap()
     private val usersEventHandlers = ArrayList<UsersNetEventHandler<ChatUserIpAddr>>()
 
     fun addUsersEventHandler(handler: UsersNetEventHandler<ChatUserIpAddr>) {
@@ -37,15 +40,26 @@ internal class UsersSessionsController(
                                  attachment: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
         when (msg.msgType!!) {
             PeerToPeerMsg.Type.CONNECT -> {
-                if (attachment in userIdMap) {
+                val id = msg.userFromId!!
+                logger.debug("Got CONNECT message; User id = [${id.ip}:${id.port}]")
+                if (attachment in userIdMap.keys) {
                     throw ProtocolViolation("Client is already connected [protocol violation]")
                 }
-                userIdMap[attachment] = msg.userFromId!!
-                idUserMap[msg.userFromId!!] = attachment
+                if (id in idUserMap.keys) {
+                    val oldUser = idUserMap[id]
+                    if (oldUser != null) {
+                        userIdMap.remove(oldUser)
+                        users.remove(oldUser)
+                    }
+                }
+                userIdMap[attachment] = id
+                idUserMap[id] = attachment
+                logger.debug("User added...")
             }
             PeerToPeerMsg.Type.DISCONNECT -> {
+                logger.debug("Got DISCONNECT message")
                 checkClientConnected(attachment)
-                destroyConnection(attachment)
+                destroyConnectionByRemoteSignal(attachment)
             }
             PeerToPeerMsg.Type.I_AM_ONLINE -> {
                 val peerId = checkClientConnected(attachment)
@@ -73,14 +87,22 @@ internal class UsersSessionsController(
         users.remove(conn)
         idUserMap.remove(userIdMap[conn])
         userIdMap.remove(conn)
+        conn.destroy()
+    }
+
+    private fun destroyConnectionByRemoteSignal(conn: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>) {
+        users.remove(conn)
+        idUserMap.remove(userIdMap[conn])
+        userIdMap.remove(conn)
         conn.writeMessage(p2pDisconnectMsg(),
                 onComplete = {
-                    logger.error("Destroying connection...")
+                    logger.debug("Destroying connection...")
                     conn.destroy()
                 },
                 onFail = { e->
                     logger.error("Failed to destroy user connection [disconnect msg. sending failed]: $e")
-                })
+                }
+        )
     }
 
     /**
@@ -97,14 +119,14 @@ internal class UsersSessionsController(
     }
 
     fun getAllUsersConnections(): List<AsyncServer<PeerToPeerMsg, PeerToPeerMsg>> {
-        return users
+        return users.toList()
     }
 
     /**
      * Destroys connection with user specified by it's id, if connection exists
      */
     fun destroyConnection(userId: ChatUserIpAddr) {
-        if (userId !in idUserMap) {
+        if (userId !in idUserMap.keys) {
             return
         }
         destroyConnection(idUserMap[userId]!!)
@@ -115,7 +137,7 @@ internal class UsersSessionsController(
         if (userConn in users) {
             throw IllegalStateException("Can't add user session twice")
         }
-        if (userId in idUserMap) {
+        if (userId in idUserMap.keys) {
             throw IllegalStateException("Session for user $userId already exists")
         }
         userConn.startReading()
@@ -138,7 +160,7 @@ internal class UsersSessionsController(
      * before any other user interaction with server
      */
     private fun checkClientConnected(client: AsyncServer<PeerToPeerMsg, PeerToPeerMsg>): ChatUserIpAddr {
-        if (client !in userIdMap) {
+        if (client !in userIdMap.keys) {
             throw ProtocolViolation("Bad client (session not properly started)")
         }
         return userIdMap[client]!!

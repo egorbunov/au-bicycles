@@ -49,6 +49,10 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
         // main class
         controller = ChatController(networkShield, chatModel)
 
+        // wiring controller as listener for special events
+        networkShield.addClientLifecycleListener(controller)
+        sessionController.addUsersEventHandler(controller)
+
         usersConnectionAcceptor = AsyncConnectionAcceptor(usersConnectionsAcceptingSocket, usersConnectionCreator)
     }
 

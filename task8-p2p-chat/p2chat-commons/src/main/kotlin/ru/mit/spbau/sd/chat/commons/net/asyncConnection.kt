@@ -14,22 +14,21 @@ import java.util.concurrent.TimeUnit
 /**
  * Asynchronous connection acceptor.
  *
- * @param port - port, where server socket will be bind
+ * @param serverSocket - opened and bound server socket
  * @param connectionListener - callback, invoked in case new connection established
  */
-class AsyncConnectionAcceptor(val port: Int,
-                           val connectionListener: AsyncConnectionListener) {
+class AsyncConnectionAcceptor(
+        val serverSocket: AsynchronousServerSocketChannel,
+        val connectionListener: AsyncConnectionListener
+) {
     companion object {
-        val logger = LoggerFactory.getLogger(AsyncConnectionAcceptor::class.java)!!
+        val logger = LoggerFactory.getLogger(AsyncConnectionAcceptor::class.java.simpleName)!!
     }
-
-    private val serverSocket = AsynchronousServerSocketChannel.open()
 
     /**
      * Binds server socket to given port and starts listening for connections, asynchronously
      */
     fun start() {
-        serverSocket.bind(InetSocketAddress(port))
         serverSocket.accept(null, object: CompletionHandler<AsynchronousSocketChannel, Nothing?> {
             override fun failed(exc: Throwable?, attachment: Nothing?) {
                 logger.error("Accept failed: $exc")

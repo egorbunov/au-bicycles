@@ -4,7 +4,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import ru.mir.spbau.sd.chat.client.net.ChatServerService
+import ru.mit.spbau.sd.chat.client.net.ChatServerService
 import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.mit.spbau.sd.chat.server.ChatServer
 import ru.mit.spbau.sd.chat.server.net.UserMapPeerMsgListener

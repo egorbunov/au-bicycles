@@ -20,7 +20,7 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
 {
 
     companion object {
-        val logger = LoggerFactory.getLogger(PeersSessionController::class.java)!!
+        val logger = LoggerFactory.getLogger(PeersSessionController::class.java.simpleName)!!
     }
     private val peers = ArrayList<AsyncServer<PeerToServerMsg, ServerToPeerMsg>>()
     private val peersIdMap = HashMap<AsyncServer<PeerToServerMsg, ServerToPeerMsg>, ChatUserIpAddr>()
@@ -33,7 +33,8 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
                 channel = channel,
                 createReadingState = { createStartReadingState { PeerToServerMsg.parseFrom(it) } },
                 createWritingState = { createStartWritingState(it.toByteArray()) },
-                messageListener = this
+                messageListener = this,
+                serverName = "Peer2ServerConnServer"
         )
         newPeer.startReading()
         peers.add(newPeer)

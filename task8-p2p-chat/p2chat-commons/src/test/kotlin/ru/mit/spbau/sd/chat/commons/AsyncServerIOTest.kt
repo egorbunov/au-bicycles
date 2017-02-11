@@ -5,6 +5,8 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.net.*
+import java.net.InetSocketAddress
+import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
 import java.util.*
 import java.util.concurrent.CountDownLatch
@@ -68,7 +70,10 @@ class AsyncServerIOTest {
         clientReceivedResponses.clear()
 
         // server side acceptor
-        val connAcceptor = AsyncConnectionAcceptor(0, serverConnListener)
+        val connAcceptor = AsyncConnectionAcceptor(
+                AsynchronousServerSocketChannel.open().bind(InetSocketAddress(0)),
+                serverConnListener
+        )
         connAcceptor.start()
 
         countDownLatch = CountDownLatch(1)
@@ -124,7 +129,7 @@ class AsyncServerIOTest {
 
     @Test
     fun testManyWrites() {
-        val clientServerMsgs = (0..5000).map(Int::toString)
+        val clientServerMsgs = (0..1000).map(Int::toString)
         countDownLatch = CountDownLatch(clientServerMsgs.size)
         clientServerMsgs.forEach {
             clientSideConnSrv!!.writeMessage(it)

@@ -25,7 +25,7 @@ class ChatServerService(
         private var clientUserInfo: ChatUserInfo) {
 
     companion object {
-        val logger = LoggerFactory.getLogger(ChatServerService::class.java)!!
+        val logger = LoggerFactory.getLogger(ChatServerService::class.java.simpleName)!!
     }
 
 
@@ -67,6 +67,7 @@ class ChatServerService(
         val channel = asyncConnect(serverAddress).get()
         sendMsg(channel, p2sConnectMsg(clientId))
         sendMsg(channel, p2sPeerGoneOfflineMsg())
+        logger.debug("Sending disconnect to server...")
         sendMsg(channel, p2sDisconnectMsg()).get()
         channel.close()
     }
@@ -79,6 +80,7 @@ class ChatServerService(
         val channel = asyncConnect(serverAddress).get()
         sendMsg(channel, p2sConnectMsg(clientId))
         sendMsg(channel, p2sMyInfoChangedMsg(clientUserInfo))
+        logger.debug("Sending disconnect to server...")
         sendMsg(channel, p2sDisconnectMsg()).get()
         channel.close()
     }
@@ -86,7 +88,7 @@ class ChatServerService(
     private fun recvUsersAndCloseFuture(channel: AsynchronousSocketChannel):
             AsyncFuture<List<Pair<ChatUserIpAddr, ChatUserInfo>>> {
         return recvMsg(channel).thenApply { msg ->
-            logger.debug("Parsing s2p message (users) and closing channel...")
+            logger.debug("Sending disconnect to server...")
             sendMsg(channel, p2sDisconnectMsg()).get()
             channel.close()
             when (msg.msgType) {

@@ -16,7 +16,7 @@ class UserConnectionCreator(
 ): AsyncConnectionListener {
 
     companion object {
-        val logger = LoggerFactory.getLogger(UserConnectionCreator::class.java)!!
+        val logger = LoggerFactory.getLogger(UserConnectionCreator::class.java.simpleName)!!
     }
 
     private fun createServer(channel: AsynchronousSocketChannel): AsyncServer<PeerToPeerMsg, PeerToPeerMsg> {
@@ -24,7 +24,8 @@ class UserConnectionCreator(
                 channel = channel,
                 createReadingState = { createStartReadingState { PeerToPeerMsg.parseFrom(it) } },
                 createWritingState = { createStartWritingState(it.toByteArray()) },
-                messageListener = connMessageListener
+                messageListener = connMessageListener,
+                serverName = "Peer2PeerConnServer"
         )
     }
     override fun connectionEstablished(channel: AsynchronousSocketChannel) {

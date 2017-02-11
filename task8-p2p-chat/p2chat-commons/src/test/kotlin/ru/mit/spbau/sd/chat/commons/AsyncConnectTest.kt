@@ -8,6 +8,8 @@ import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionAcceptor
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionListener
 import ru.mit.spbau.sd.chat.commons.net.asyncConnect
+import java.net.InetSocketAddress
+import java.nio.channels.AsynchronousServerSocketChannel
 
 /**
  * Created by: Egor Gorbunov
@@ -24,7 +26,7 @@ class AsyncConnectTest {
 
         // server
         val connAcceptor = AsyncConnectionAcceptor(
-                0,
+                AsynchronousServerSocketChannel.open().bind(InetSocketAddress(0)),
                 serverConnListener
         )
         connAcceptor.start()
@@ -52,7 +54,7 @@ class AsyncConnectTest {
 
         // server
         val connAcceptor = AsyncConnectionAcceptor(
-                0,
+                AsynchronousServerSocketChannel.open().bind(InetSocketAddress(0)),
                 serverConnListener
         )
         connAcceptor.start()

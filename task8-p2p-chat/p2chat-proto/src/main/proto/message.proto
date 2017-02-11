@@ -50,9 +50,8 @@ message ServerToPeerMsg {
     }
 
     Type msgType = 1;
-
     // this field is filled only in case of USERS_INFO_DATA msg type
-    UsersList users = 4;
+    UsersList users = 2;
 }
 
 message PeerToPeerMsg {

@@ -100,4 +100,15 @@ class UserSessionControllerTest {
         sessionController.messageReceived(p2pDisconnectMsg(), session)
         Assert.assertTrue(sessionController.getAllUsersConnections().isEmpty())
     }
+
+    @Test
+    fun testThisClientSelfConnect() {
+        val sessionController = UsersSessionsController(clientId)
+        val session = createAsyncServerMock()
+        sessionController.setupRemotelyInitiatedConnection(session)
+        sessionController.messageReceived(p2pConnectMsg(clientId), session)
+        Assert.assertEquals(session, sessionController.getOneUserConnection(clientId))
+        sessionController.messageReceived(p2pDisconnectMsg(), session)
+        Assert.assertTrue(sessionController.getAllUsersConnections().isEmpty())
+    }
 }
