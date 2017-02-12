@@ -1,4 +1,4 @@
-package ru.mir.spbau.sd.chat.server
+package ru.mit.spbau.sd.chat.server
 
 import com.nhaarman.mockito_kotlin.*
 import org.junit.Test

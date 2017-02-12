@@ -6,7 +6,9 @@ import ru.spbau.mit.sd.commons.proto.PeerToServerMsg
 import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
 import java.nio.channels.AsynchronousSocketChannel
 
-
+/**
+ * This class ensures that connection with peer is established properly
+ */
 class PeerConnectionManager internal constructor(
         val sessionController: PeersSessionController
 ): AsyncConnectionListener {
