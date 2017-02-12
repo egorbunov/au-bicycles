@@ -6,9 +6,20 @@ import java.net.InetSocketAddress
 import java.util.concurrent.ConcurrentHashMap
 
 fun main(args: Array<String>) {
+    if (args.isEmpty()) {
+        println("USAGE: java -jar server.jar [PORT NUMBER]")
+        return
+    }
+
     val chatModel = ConcurrentHashMap<InetSocketAddress, ChatUserInfo>()
     val modelChanger = UserMapPeerMsgListener(chatModel)
-    val server = ChatServer(args[0].toInt(), modelChanger)
+
+    val server = try {
+        ChatServer(args[0].toInt(), modelChanger)
+    } catch (e: Exception) {
+        println("Port is an integer number!")
+        return
+    }
 
 
     server.start()

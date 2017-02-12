@@ -22,9 +22,9 @@ repositories {
 
 jar {
     manifest {
-        attributes "Main-Class": "ru.mit.spbau.sd.chat.server.MainKt"
+        attributes "Main-Class": "ru.mit.spbau.sd.chat.server.ServerKt"
     }
-
+    archiveName = "p2chat-server.jar"
     from {
         configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }

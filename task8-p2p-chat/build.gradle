@@ -15,14 +15,10 @@ buildscript {
 apply plugin: 'java'
 apply plugin: 'kotlin'
 
-jar {
-    manifest {
-        attributes "Main-Class": "ru.spbau.mit.aush.MainKt"
-    }
-
-    from {
-        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-    }
+task copyJars(type: Copy) {
+    def jarProjects = [project(':p2chat-gui'), project(':p2chat-server')]
+    from jarProjects.collect() { it.tasks.withType(Jar) }
+    into "$buildDir/jars"
 }
 
 repositories {
