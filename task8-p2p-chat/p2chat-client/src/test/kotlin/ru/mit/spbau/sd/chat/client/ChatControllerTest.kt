@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.client
 
 import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doReturn
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.verify
 import org.junit.Test
@@ -8,6 +9,7 @@ import org.mockito.Mockito
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
 import ru.mit.spbau.sd.chat.client.model.ChatModel
 import ru.mit.spbau.sd.chat.client.net.ChatNetworkShield
+import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -15,9 +17,15 @@ import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 
 open class ChatControllerTest {
     private fun getNetShieldMock(): ChatNetworkShield {
-        val netShield: ChatNetworkShield = mock()
-        Mockito.doNothing().`when`(netShield).startClient(any())
-        Mockito.doNothing().`when`(netShield).stopClient()
+        val asyncF = object: AsyncFuture<Unit> {
+            override fun get() {
+            }
+        }
+
+        val netShield: ChatNetworkShield = mock {
+            on { startClient(any()) } doReturn asyncF
+            on { stopClient() } doReturn asyncF
+        }
         Mockito.doNothing().`when`(netShield).changeClientInfo(any())
         Mockito.doNothing().`when`(netShield).sendChatMessage(any(), any())
         return netShield
