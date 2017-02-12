@@ -24,9 +24,7 @@ class ChatServerService(
         private val clientId: ChatUserIpAddr,
         private var clientUserInfo: ChatUserInfo) {
 
-    companion object {
-        val logger = LoggerFactory.getLogger(ChatServerService::class.java.simpleName)!!
-    }
+    val logger = LoggerFactory.getLogger("ChatServerService[${clientId.port}]")!!
 
 
     private val usersListCountdown = CountDownLatch(1)

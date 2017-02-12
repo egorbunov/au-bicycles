@@ -1,8 +1,10 @@
 package ru.mit.spbau.sd.chat.client
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
 import ru.mit.spbau.sd.chat.client.model.ChatModel
 import ru.mit.spbau.sd.chat.client.net.*
+import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionAcceptor
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
@@ -41,9 +43,8 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
 
         val chatServerService = ChatServerService(serverAddress, clientId, clientInfo)
         sessionController = UsersSessionsController(clientId)
-        val usersConnectionCreator = UserConnectionCreator(sessionController, sessionController)
-        val usersConnectionsInterface = UsersConnectionsInterface(sessionController, usersConnectionCreator)
-        val networkShield = ChatNetworkShield(clientId, chatServerService, usersConnectionsInterface)
+        val usersConnManager = UsersConnectionManager(clientId, sessionController)
+        val networkShield = ChatNetworkShield(clientId, chatServerService, usersConnManager)
         chatModel = ChatModel(clientId, clientInfo)
 
         // main class
@@ -53,16 +54,21 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
         networkShield.addClientLifecycleListener(controller)
         sessionController.addUsersEventHandler(controller)
 
-        usersConnectionAcceptor = AsyncConnectionAcceptor(usersConnectionsAcceptingSocket, usersConnectionCreator)
+        usersConnectionAcceptor = AsyncConnectionAcceptor(usersConnectionsAcceptingSocket, usersConnManager)
+    }
+
+    fun addChatEventListener(listener: ChatEventsListener<ChatUserIpAddr>) {
+        controller.addChatModelChangeListener(listener)
     }
 
     /**
      * This call is propagated to `networkShield`
      */
-    fun startClient() {
+    fun startClient(): AsyncFuture<Unit> {
         logger.debug("Starting chat client...")
-        controller.startClient()
+        val ret = controller.startClient()
         usersConnectionAcceptor.start()
+        return ret
     }
 
     /**
@@ -71,7 +77,7 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
     fun stopClient() {
         logger.debug("Destroying chat client...")
         usersConnectionAcceptor.destroy()
-        controller.stopClient()
+        controller.stopClient() // TODO: what bout async future return?
         sessionController.destroy()
     }
 

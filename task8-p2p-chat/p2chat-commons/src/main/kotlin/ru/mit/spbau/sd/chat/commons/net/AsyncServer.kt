@@ -49,11 +49,12 @@ import java.util.concurrent.locks.ReentrantLock
  * @param T - type of message read from channel (request type)
  * @param U - type of message written to channel (response type)
  */
-open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
-                                private val createReadingState: () -> ReadingState<T>,
-                                private val createWritingState: (msg: U) -> WritingState,
-                                private val messageListener: MessageListener<T, AsyncServer<T, U>>,
-                                serverName: String = AsyncServer::class.java.name) {
+open class AsyncServer<out T, in U, out A>(private val channel: AsynchronousSocketChannel,
+                                           private val createReadingState: () -> ReadingState<T>,
+                                           private val createWritingState: (msg: U) -> WritingState,
+                                           private val messageListener: MessageListener<T, AsyncServer<T, U, A>>,
+                                           val payload: A? = null,
+                                           serverName: String = AsyncServer::class.java.name) {
     val logger = LoggerFactory.getLogger(serverName)!!
 
     private var readingState = createReadingState()
@@ -80,6 +81,10 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
     @Volatile
     private var isReadingStarted = false
 
+
+    open fun getHeldPayload(): A? {
+        return payload
+    }
 
     /**
      * Starts listening for incoming messages
@@ -133,7 +138,7 @@ open class AsyncServer<T, in U>(private val channel: AsynchronousSocketChannel,
      * @param onFail on fail handler
      */
     open fun writeMessage(msg: U, onComplete: () -> Unit, onFail: (Throwable?) -> Unit) {
-        logger.debug("Adding message write request, message: ${prepareMsg(msg)}...")
+        logger.debug("Starting Write: message: ${prepareMsg(msg)}...")
 
         /*
             I use this synchronization because it seems possible, that

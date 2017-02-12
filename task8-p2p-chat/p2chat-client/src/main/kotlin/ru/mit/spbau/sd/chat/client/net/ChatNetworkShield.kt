@@ -2,14 +2,12 @@ package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.client.msg.ClientLifecycleListener
-import ru.mit.spbau.sd.chat.commons.p2pIAmGoneOfflineMsg
-import ru.mit.spbau.sd.chat.commons.p2pIAmOnlineMsg
-import ru.mit.spbau.sd.chat.commons.p2pMyInfoChangedMsg
-import ru.mit.spbau.sd.chat.commons.p2pTextMessageMsg
+import ru.mit.spbau.sd.chat.commons.*
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import java.util.*
+import java.util.concurrent.CountDownLatch
 
 /**
  * ChatNetworkInterface implementation
@@ -19,12 +17,10 @@ import java.util.*
 internal open class ChatNetworkShield(
         private val clientId: ChatUserIpAddr,
         private val chatServerService: ChatServerService,
-        private val usersConnectionsInterface: UsersConnectionsInterface) :
+        private val usersConnManager: UsersConnectionManager) :
         ChatNetworkInterface {
 
-    companion object {
-        val logger = LoggerFactory.getLogger(UsersSessionsController::class.java)!!
-    }
+    val logger = LoggerFactory.getLogger("NetShield[${clientId.port}]")!!
 
     private val listeners = ArrayList<ClientLifecycleListener>()
 
@@ -43,68 +39,89 @@ internal open class ChatNetworkShield(
     /**
      * Sending "I'am online" message to server and to
      */
-    override fun startClient(clientInfo: ChatUserInfo) {
+    override fun startClient(clientInfo: ChatUserInfo): AsyncFuture<Unit> {
         val usersList = chatServerService.startChatting().get()
-        for ((userId) in usersList.filter { it.first != clientId }) {
-            usersConnectionsInterface.connectToUser(
+        val filteredList = usersList.filter { it.first != clientId }
+        val countdown = CountDownLatch(filteredList.size)
+        for ((userId) in filteredList) {
+            usersConnManager.connectToUser(
                     userId,
                     onComplete = { server ->
                         server.writeMessage(p2pIAmOnlineMsg(clientInfo))
-                        usersConnectionsInterface.disconnectUser(server)
+                        usersConnManager.disconnectUser(userId)
+                        countdown.countDown()
                     },
                     onFail = {
-                        logger.error("User $userId connect failed: $it")
+                        logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
+                        countdown.countDown()
                     }
             )
         }
         listeners.forEach { it.clientStarted(usersList) }
+
+        return object: AsyncFuture<Unit> {
+            override fun get() {
+                countdown.await()
+            }
+        }
     }
 
-    override fun stopClient() {
+    override fun stopClient(): AsyncFuture<Unit> {
         chatServerService.stopChatting()
-        val users = chatServerService.getUsers().get()
-        for ((userId) in users.filter { it.first != clientId }) {
-            usersConnectionsInterface.connectToUser(
+        val usersList = chatServerService.getUsers().get()
+        val filteredList = usersList.filter { it.first != clientId }
+        val countdown = CountDownLatch(filteredList.size)
+        for ((userId) in filteredList) {
+            usersConnManager.connectToUser(
                     userId,
                     onComplete = { server ->
                         server.writeMessage(p2pIAmGoneOfflineMsg())
-                        usersConnectionsInterface.disconnectUser(server)
+                        usersConnManager.disconnectUser(userId)
+                        countdown.countDown()
                     },
                     onFail = {
-                        logger.error("User $userId connect failed: $it")
+                        logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
+                        countdown.countDown()
                     }
             )
         }
         listeners.forEach { it.clientStopped() }
+
+        return object: AsyncFuture<Unit> {
+            override fun get() {
+                countdown.await()
+            }
+        }
     }
 
     override fun sendChatMessage(userId: ChatUserIpAddr, msg: ChatMessage) {
         if (userId == clientId) {
             return
         }
-        usersConnectionsInterface.connectToUser(
+        usersConnManager.connectToUser(
                 userId,
                 onComplete = { conn ->
                     conn.writeMessage(p2pTextMessageMsg(msg))
                 },
                 onFail = {
-                    logger.error("User $userId connect failed: $it")
+                    logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
                 }
         )
     }
 
     override fun changeClientInfo(newInfo: ChatUserInfo) {
         chatServerService.changeClientInfo(newInfo)
-        val users = chatServerService.getUsers().get()
-        for ((userId) in users.filter { it.first != clientId }) {
-            usersConnectionsInterface.connectToUser(
+        val usersList = chatServerService.getUsers().get()
+        val filteredList = usersList.filter { it.first != clientId }
+        for ((userId) in filteredList) {
+            usersConnManager.connectToUser(
                     userId,
                     onComplete = { server ->
                         server.writeMessage(p2pMyInfoChangedMsg(newInfo))
-                        usersConnectionsInterface.disconnectUser(server)
+                        usersConnManager.disconnectUser(userId)
                     },
                     onFail = {
-                        logger.error("User $userId connect failed: $it")
+                        logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
                     }
             )
         }

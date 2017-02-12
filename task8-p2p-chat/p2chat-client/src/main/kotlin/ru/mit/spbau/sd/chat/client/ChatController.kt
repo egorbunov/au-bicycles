@@ -6,6 +6,7 @@ import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
 import ru.mit.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mit.spbau.sd.chat.client.msg.UsersNetEventHandler
 import ru.mit.spbau.sd.chat.client.net.ChatNetworkShield
+import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -25,10 +26,7 @@ class ChatController internal constructor(
 ):
         UsersNetEventHandler<ChatUserIpAddr>,
         ClientLifecycleListener {
-
-    companion object {
-        val logger = LoggerFactory.getLogger(javaClass.name)
-    }
+    val logger = LoggerFactory.getLogger("Controller[${chatModel.clientId.port}]")!!
 
     private val modelListeners = ArrayList<ChatEventsListener<ChatUserIpAddr>>()
 
@@ -43,15 +41,15 @@ class ChatController internal constructor(
     /**
      * This call is propagated to `networkShield`
      */
-    fun startClient() {
-        networkShield.startClient(chatModel.clientInfo)
+    fun startClient(): AsyncFuture<Unit> {
+        return networkShield.startClient(chatModel.clientInfo)
     }
 
     /**
      * This call is propagated to `networkShield` too.
      */
-    fun stopClient() {
-        networkShield.stopClient()
+    fun stopClient(): AsyncFuture<Unit> {
+        return networkShield.stopClient()
     }
 
     /**

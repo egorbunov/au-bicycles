@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.server
 
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionAcceptor
+import ru.mit.spbau.sd.chat.server.net.PeerConnectionManager
 import ru.mit.spbau.sd.chat.server.net.PeersSessionController
 import ru.mit.spbau.sd.chat.server.net.UserMapPeerMsgListener
 import java.net.InetSocketAddress
@@ -10,9 +11,10 @@ import java.nio.channels.AsynchronousServerSocketChannel
 
 class ChatServer(port: Int, msgListener: UserMapPeerMsgListener) {
     private val peerSessionController = PeersSessionController(msgListener)
+    private val peerConnectionManager = PeerConnectionManager(peerSessionController)
     private val connectionAcceptor = AsyncConnectionAcceptor(
             AsynchronousServerSocketChannel.open().bind(InetSocketAddress(port)),
-            peerSessionController
+            peerConnectionManager
     )
 
     fun address(): SocketAddress {

@@ -20,9 +20,9 @@ class AsyncServerIOTest {
     var countDownLatch: CountDownLatch? = null
 
     // server side connection server
-    var serverSideConnSrv: AsyncServer<String, String>? = null
+    var serverSideConnSrv: AsyncServer<String, String, Nothing>? = null
     // client side connection server
-    var clientSideConnSrv: AsyncServer<String, String>? = null
+    var clientSideConnSrv: AsyncServer<String, String, Nothing>? = null
 
     /**
      * array with messages, received by server from client
@@ -34,15 +34,15 @@ class AsyncServerIOTest {
     val clientReceivedResponses: MutableList<String> = Collections.synchronizedList(ArrayList<String>())!!
 
 
-    val serverMessageListener = object: MessageListener<String, AsyncServer<String, String>> {
-        override fun messageReceived(msg: String, attachment: AsyncServer<String, String>) {
+    val serverMessageListener = object: MessageListener<String, AsyncServer<String, String, Nothing>> {
+        override fun messageReceived(msg: String, attachment: AsyncServer<String, String, Nothing>) {
             serverReceivedRequests.add(msg)
             countDownLatch!!.countDown()
         }
     }
 
-    val clientMessageListener = object: MessageListener<String, AsyncServer<String, String>> {
-        override fun messageReceived(msg: String, attachment: AsyncServer<String, String>) {
+    val clientMessageListener = object: MessageListener<String, AsyncServer<String, String, Nothing>> {
+        override fun messageReceived(msg: String, attachment: AsyncServer<String, String, Nothing>) {
             clientReceivedResponses.add(msg)
             countDownLatch!!.countDown()
 
@@ -85,7 +85,7 @@ class AsyncServerIOTest {
         clientSideConnSrv = AsyncServer(
                 clientConnection,
                 { createStartReadingState { String(it) }},
-                { str -> createStartWritingState(str.toByteArray())},
+                { str: String -> createStartWritingState(str.toByteArray())},
                 clientMessageListener
         )
         serverSideConnSrv!!.startReading()

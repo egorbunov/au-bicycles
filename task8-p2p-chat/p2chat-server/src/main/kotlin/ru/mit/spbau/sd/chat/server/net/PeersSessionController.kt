@@ -9,66 +9,46 @@ import ru.spbau.mit.sd.commons.proto.PeerToServerMsg
 import ru.spbau.mit.sd.commons.proto.ServerToPeerMsg
 import java.nio.channels.AsynchronousSocketChannel
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 /**
  * Controls all peer sessions and dispatches messages, got from them
  */
 internal class PeersSessionController(val peerEventHandler: PeerEventHandler<ChatUserIpAddr>):
-        MessageListener<PeerToServerMsg, AsyncServer<PeerToServerMsg, ServerToPeerMsg>>,
-        AsyncConnectionListener
+        MessageListener<PeerToServerMsg, AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr>>
 {
-
     companion object {
         val logger = LoggerFactory.getLogger(PeersSessionController::class.java.simpleName)!!
     }
-    private val peers = ArrayList<AsyncServer<PeerToServerMsg, ServerToPeerMsg>>()
-    private val peersIdMap = HashMap<AsyncServer<PeerToServerMsg, ServerToPeerMsg>, ChatUserIpAddr>()
-    private val idPeersMap = HashMap<ChatUserIpAddr, AsyncServer<PeerToServerMsg, ServerToPeerMsg>>()
 
-    override fun connectionEstablished(channel: AsynchronousSocketChannel) {
-        logger.debug("New connection established with peer!")
-        // creating session - async. single connection server for exact one peer
-        val newPeer = AsyncServer(
-                channel = channel,
-                createReadingState = { createStartReadingState { PeerToServerMsg.parseFrom(it) } },
-                createWritingState = { createStartWritingState(it.toByteArray()) },
-                messageListener = this,
-                serverName = "Peer2ServerConnServer"
-        )
-        newPeer.startReading()
-        peers.add(newPeer)
+    private val idPeersMap = 
+            ConcurrentHashMap<ChatUserIpAddr, AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr>>()
+
+
+    fun addPreparedConnection(channel: AsynchronousSocketChannel, userId: ChatUserIpAddr) {
+        val server = createPeerServer(channel, userId)
+        idPeersMap[userId] = server
+        server.startReading()
     }
 
 
     override fun messageReceived(msg: PeerToServerMsg,
-                                 attachment: AsyncServer<PeerToServerMsg, ServerToPeerMsg>) {
+                                 attachment: AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr>) {
+        val peerId = attachment.getHeldPayload()!!
+
         when (msg.msgType!!) {
             PeerToServerMsg.Type.CONNECT -> {
-                if (attachment in peersIdMap) {
-                    throw ProtocolViolation("Client is already connected [protocol violation]")
-                }
-                peersIdMap[attachment] = msg.userId!!
-                idPeersMap[msg.userId!!] = attachment
-                attachment.writeMessageSync(
-                        ServerToPeerMsg.newBuilder()
-                                .setMsgType(ServerToPeerMsg.Type.CONNECT_OK)
-                                .build()
-                )
+                logger.error("Unexpected connect message...")
             }
             PeerToServerMsg.Type.DISCONNECT -> {
-                checkClientConnected(attachment)
-                peers.remove(attachment)
-                idPeersMap.remove(peersIdMap[attachment])
-                peersIdMap.remove(attachment)
+                idPeersMap.remove(peerId)
                 attachment.destroy()
             }
             PeerToServerMsg.Type.PEER_ONLINE -> {
-                val peerId = checkClientConnected(attachment)
                 peerEventHandler.peerBecomeOnline(peerId, msg.userInfo!!)
             }
             PeerToServerMsg.Type.GET_AVAILABLE_USERS -> {
-                checkClientConnected(attachment)
                 val availableUsers = listToUsersList(peerEventHandler.usersRequested())
                 val usersMessage = ServerToPeerMsg.newBuilder()
                         .setMsgType(ServerToPeerMsg.Type.AVAILABLE_USERS)
@@ -77,11 +57,9 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
                 attachment.writeMessage(usersMessage)
             }
             PeerToServerMsg.Type.MY_INFO_CHANGED -> {
-                val peerId = checkClientConnected(attachment)
                 peerEventHandler.peerChangedInfo(peerId, msg.userInfo!!)
             }
             PeerToServerMsg.Type.PEER_GONE_OFFLINE -> {
-                val peerId = checkClientConnected(attachment)
                 peerEventHandler.peerGoneOffline(peerId)
             }
             PeerToServerMsg.Type.UNRECOGNIZED -> {
@@ -90,26 +68,25 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
         }
     }
 
-    /**
-     * Checks if client sent CONNECT message already; This check is performed
-     * before any other user interaction with server
-     */
-    private fun checkClientConnected(client: AsyncServer<PeerToServerMsg, ServerToPeerMsg>): ChatUserIpAddr {
-        if (client !in peersIdMap) {
-            throw ProtocolViolation("Bad client (session not properly started)")
-        }
-        return peersIdMap[client]!!
-    }
-
     fun destroy() {
-        peersIdMap.clear()
+        idPeersMap.values.forEach { it.destroy() }
         idPeersMap.clear()
-        for (peer in peers) {
-            peer.destroy()
-        }
     }
 
-    fun getOneUserConnection(userId: ChatUserIpAddr): AsyncServer<PeerToServerMsg, ServerToPeerMsg>? {
+    fun getOneUserConnection(userId: ChatUserIpAddr): AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr>? {
         return idPeersMap[userId]
+    }
+
+    private fun createPeerServer(channel: AsynchronousSocketChannel, userId: ChatUserIpAddr):
+            AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr> {
+        val newPeer = AsyncServer(
+                channel = channel,
+                createReadingState = { createStartReadingState { PeerToServerMsg.parseFrom(it) } },
+                createWritingState = { createStartWritingState(it.toByteArray()) },
+                messageListener = this,
+                payload = userId,
+                serverName = "P2SConnSrv[${userId.port}]"
+        )
+        return newPeer
     }
 }

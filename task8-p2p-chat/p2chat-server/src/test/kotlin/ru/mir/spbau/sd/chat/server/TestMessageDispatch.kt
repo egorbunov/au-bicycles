@@ -1,9 +1,6 @@
 package ru.mir.spbau.sd.chat.server
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doThrow
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.*
 import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.*
 import ru.mit.spbau.sd.chat.commons.net.AsyncServer
@@ -21,9 +18,10 @@ class TestMessageDispatch {
         val msgListener: PeerEventHandler<ChatUserIpAddr> = mock()
         val dispatcher = PeersSessionController(msgListener)
         val userId = ChatUserIpAddr.newBuilder().setIp("1.1.1.1").setPort(42).build()!!
-        val attachment: AsyncServer<PeerToServerMsg, ServerToPeerMsg> = mock {
+        val attachment: AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr> = mock {
             onGeneric { writeMessage(any()) } doThrow RuntimeException()
             on { destroy() } doThrow RuntimeException()
+            on { getHeldPayload() } doReturn userId
         }
 
         dispatcher.messageReceived(p2sConnectMsg(userId), attachment)
