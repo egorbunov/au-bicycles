@@ -26,11 +26,6 @@ class ChatServerService(
 
     val logger = LoggerFactory.getLogger("ChatServerService[${clientId.port}]")!!
 
-
-    private val usersListCountdown = CountDownLatch(1)
-    @Volatile
-    private var lastUsersList: List<Pair<ChatUserIpAddr, ChatUserInfo>>? = null
-
     private fun serverConnect(): AsynchronousSocketChannel {
         logger.debug("Connecting to chat server...")
         val channel = asyncConnect(serverAddress).get()

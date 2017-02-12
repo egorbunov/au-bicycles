@@ -21,7 +21,7 @@ import java.nio.channels.AsynchronousServerSocketChannel
  */
 class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
     companion object {
-        val logger = LoggerFactory.getLogger(Chat::class.java.name)
+        val logger = LoggerFactory.getLogger(Chat::class.java.name)!!
     }
 
     private val usersConnectionAcceptor: AsyncConnectionAcceptor
@@ -111,12 +111,5 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
      */
     fun getMessagesWithUser(userId: ChatUserIpAddr): List<Pair<ChatUserIpAddr, ChatMessage>> {
         return chatModel.getMessages(userId)
-    }
-
-    /**
-     * Returns list of users stored in chat model
-     */
-    fun getAvailableUsersList(): List<Pair<ChatUserIpAddr, ChatUserInfo>> {
-        return chatModel.getUsers()
     }
 }

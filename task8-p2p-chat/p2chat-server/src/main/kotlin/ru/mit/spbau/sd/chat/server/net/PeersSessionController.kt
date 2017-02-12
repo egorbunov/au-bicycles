@@ -73,10 +73,6 @@ internal class PeersSessionController(val peerEventHandler: PeerEventHandler<Cha
         idPeersMap.clear()
     }
 
-    fun getOneUserConnection(userId: ChatUserIpAddr): AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr>? {
-        return idPeersMap[userId]
-    }
-
     private fun createPeerServer(channel: AsynchronousSocketChannel, userId: ChatUserIpAddr):
             AsyncServer<PeerToServerMsg, ServerToPeerMsg, ChatUserIpAddr> {
         val newPeer = AsyncServer(

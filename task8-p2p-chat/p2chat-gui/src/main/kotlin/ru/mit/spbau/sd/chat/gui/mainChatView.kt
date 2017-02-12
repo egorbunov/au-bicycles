@@ -1,7 +1,6 @@
 package ru.mit.spbau.sd.chat.gui
 
 import javafx.application.Platform
-import javafx.beans.Observable
 import javafx.beans.property.SimpleStringProperty
 import javafx.collections.FXCollections
 import javafx.geometry.Pos
@@ -33,7 +32,7 @@ data class ChatUserView(val name: String, val id: ChatUserIpAddr, val hasNotRead
 
 class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
     companion object {
-        val logger = LoggerFactory.getLogger("ChatClientGUI")
+        val logger = LoggerFactory.getLogger("ChatClientGUI")!!
     }
 
     override val root = BorderPane()
@@ -185,11 +184,11 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
             val user = usersList.find { it.id == senderId }
             if (activeUser == null || senderId != activeUser) {
                 logger.debug("Mariking user ${user!!.name} as having new message")
-                changeUserInList(ChatUserView(user!!.name, senderId, true))
+                changeUserInList(ChatUserView(user.name, senderId, true))
             } else if (activeUser != null && senderId == activeUser) {
                 logger.debug("Adding new message [${message.text}] to current message list")
                 val newMsgView = ChatMsgView(user!!.name, message)
-                messageList.add(ChatMsgView(user!!.name, message))
+                messageList.add(ChatMsgView(user.name, message))
                 messageListView.scrollTo(newMsgView)
                 messageListView.refresh()
 

@@ -18,7 +18,7 @@ class ChatUIController(val mainWindow: MainWindow,
         Controller() {
 
     companion object {
-        val logger = LoggerFactory.getLogger("ChatUIController")
+        val logger = LoggerFactory.getLogger("ChatUIController")!!
     }
 
     @Volatile

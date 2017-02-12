@@ -104,10 +104,6 @@ internal class UsersSessionsController(
         return idUserMap[userId]
     }
 
-    fun getAllUsersConnections(): List<AsyncServer<PeerToPeerMsg, PeerToPeerMsg, ChatUserIpAddr>> {
-        return idUserMap.values.toList()
-    }
-
     /**
      * Add new session with user;
      *
