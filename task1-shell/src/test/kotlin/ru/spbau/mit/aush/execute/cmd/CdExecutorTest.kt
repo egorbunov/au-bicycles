@@ -1,21 +1,17 @@
 package ru.spbau.mit.aush.execute.cmd
 
 import org.junit.Assert
-import org.junit.Test
-
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
+import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import ru.spbau.mit.aush.execute.AushContext
 import ru.spbau.mit.aush.execute.SpecialVars
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
-import java.io.File
 import java.util.*
 
 /**
  * @author Anton Mordberg
- * *
  * @since 10.02.17
  */
 class CdExecutorTest {

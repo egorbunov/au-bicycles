@@ -12,8 +12,9 @@ class AushContext private constructor() {
     private var lastExitCode: Int = 0
 
     init {
-        addVar(SpecialVars.PATH.name, System.getenv("PATH"))
-        addVar(SpecialVars.PWD.name, System.getenv("PWD"))
+        val workDir = System.getProperty("user.dir")
+        addVar(SpecialVars.PATH.name, workDir)
+        addVar(SpecialVars.PWD.name, workDir)
     }
 
     private object instanceHolder { val instance = AushContext() }
