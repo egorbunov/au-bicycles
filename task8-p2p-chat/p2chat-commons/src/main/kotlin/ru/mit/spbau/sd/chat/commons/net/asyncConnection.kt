@@ -35,10 +35,10 @@ class AsyncConnectionAcceptor(
             }
 
             override fun completed(result: AsynchronousSocketChannel?, attachment: Nothing?) {
-                logger.info("Accepted connection from: ${result!!.remoteAddress}")
-                connectionListener.connectionEstablished(result)
+//                logger.info("Accepted connection from: ${result!!.remoteAddress}")
+                connectionListener.connectionEstablished(result!!)
                 // subscribe on accept again
-                serverSocket!!.accept(null, this)
+                serverSocket.accept(null, this)
             }
         })
     }
@@ -79,7 +79,7 @@ fun asyncConnect(address: SocketAddress,
     val connection = AsynchronousSocketChannel.open()
     connection.connect(address, null, object: CompletionHandler<Void, Nothing?> {
         override fun completed(result: Void?, attachment: Nothing?) {
-            logger.debug("Connection wit $address established successfully")
+//            logger.debug("Connection wit $address established successfully")
             onComplete(connection)
         }
 

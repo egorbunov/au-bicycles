@@ -10,34 +10,26 @@ import org.mockito.internal.verification.Times
 import ru.mit.spbau.sd.chat.client.Chat
 import ru.mit.spbau.sd.chat.client.createChatMessage
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
-import ru.mit.spbau.sd.chat.server.ChatServer
-import ru.mit.spbau.sd.chat.server.net.UserMapPeerMsgListener
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
-import java.net.InetSocketAddress
+import java.net.SocketAddress
 import java.util.*
 
 
 class TestChatServerOneClientInteraction {
-    var serverUsersMap: MutableMap<InetSocketAddress, ChatUserInfo>? = null
-    var chatServer: ChatServer? = null
 
-    fun createClient(name: String): Chat {
-        val chat = Chat(chatServer!!.address(), ChatUserInfo.newBuilder().setName(name).build()!!)
+    fun createClient(name: String, serverPeerAddr: SocketAddress? = null): Chat {
+        val chat = Chat(ChatUserInfo.newBuilder().setName(name).build()!!, serverPeerAddr)
         return chat
     }
 
     @Before
     fun before() {
-        serverUsersMap = Collections.synchronizedMap(HashMap<InetSocketAddress, ChatUserInfo>())!!
-        chatServer = ChatServer(0, UserMapPeerMsgListener(serverUsersMap!!))
-        chatServer!!.start()
     }
 
     @After
     fun after() {
-        chatServer!!.stop()
     }
 
     @Test
@@ -86,7 +78,7 @@ class TestChatServerOneClientInteraction {
         val c1 = createClient("Alice")
         val l1 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c1.addChatEventListener(l1)
-        val c2 = createClient("Bob")
+        val c2 = createClient("Bob", c1.getAddress())
         val l2 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c2.addChatEventListener(l2)
 
@@ -112,7 +104,7 @@ class TestChatServerOneClientInteraction {
         val c1 = createClient("Alice")
         val l1 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c1.addChatEventListener(l1)
-        val c2 = createClient("Bob")
+        val c2 = createClient("Bob", c1.getAddress())
         val l2 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c2.addChatEventListener(l2)
 
@@ -141,7 +133,7 @@ class TestChatServerOneClientInteraction {
         val c1 = createClient("Alice")
         val l1 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c1.addChatEventListener(l1)
-        val c2 = createClient("Bob")
+        val c2 = createClient("Bob", c1.getAddress())
         val l2 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c2.addChatEventListener(l2)
 
@@ -171,7 +163,7 @@ class TestChatServerOneClientInteraction {
         val messages = ArrayList<ChatMessage>()
         val n = 10
         (0..n).forEach {
-            clientList.add(createClient(it.toString()))
+            clientList.add(createClient(it.toString(), if (it != 0) clientList[it - 1].getAddress() else null))
             listenersList.add(mock())
             clientList.last().addChatEventListener(listenersList.last())
             messages.add(createChatMessage(it.toString()))

@@ -12,12 +12,12 @@ interface ChatNetworkInterface {
     /**
      * Start client: tell chat network, that client is available for interaction
      */
-    fun startClient(clientInfo: ChatUserInfo): AsyncFuture<Unit>
+    fun startClient(clientInfo: ChatUserInfo)
 
     /**
      * Stop client: tell chat network, that client gone offline
      */
-    fun stopClient(): AsyncFuture<Unit>
+    fun stopClient()
 
     /**
      * Send text chat message through chat network to other chat user

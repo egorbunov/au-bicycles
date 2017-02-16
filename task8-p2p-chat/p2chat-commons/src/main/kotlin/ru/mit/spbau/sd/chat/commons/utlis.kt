@@ -7,16 +7,14 @@ import ru.spbau.mit.sd.commons.proto.UsersList
 import java.net.InetAddress
 import java.net.InetSocketAddress
 
-/**
- * Created by: Egor Gorbunov
- * Date: 2/3/17
- * Email: egor-mailbox@ya.com
- */
 
 fun intSizeInBytes(): Int {
     return 4
 }
 
+/**
+ * Converts given inet socket address to protobuf `ChatUserIpAddr` struct
+ */
 fun inetSockAddrToUserIp(addr: InetSocketAddress): ChatUserIpAddr {
     return ChatUserIpAddr.newBuilder()
             .setIp(addr.address.hostAddress!!)
@@ -24,10 +22,17 @@ fun inetSockAddrToUserIp(addr: InetSocketAddress): ChatUserIpAddr {
             .build()!!
 }
 
+/**
+ * Converts protobuf `ChatUserIpAddr` to socket address
+ */
 fun userIpToSockAddr(userIp: ChatUserIpAddr): InetSocketAddress {
     return InetSocketAddress(InetAddress.getByName(userIp.ip), userIp.port)
 }
 
+/**
+ * Builds UsersList message, which can be simply sent through socket, from
+ * java list of users descriptions
+ */
 fun listToUsersList(list: List<Pair<ChatUserIpAddr, ChatUserInfo>>): UsersList {
     return UsersList.newBuilder()
             .addAllUsers(
@@ -40,6 +45,9 @@ fun listToUsersList(list: List<Pair<ChatUserIpAddr, ChatUserInfo>>): UsersList {
             .build()!!
 }
 
+/**
+ * Expands UsersList message as java list
+ */
 fun usersListToList(usersList: UsersList): List<Pair<ChatUserIpAddr, ChatUserInfo>> {
     return usersList.usersList!!.map {
         Pair(it.id!!, it.info!!)

@@ -1,9 +1,6 @@
 package ru.mit.spbau.sd.chat.commons
 
-import ru.spbau.mit.sd.commons.proto.ChatMessage
-import ru.spbau.mit.sd.commons.proto.ChatUserInfo
-import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
-import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
+import ru.spbau.mit.sd.commons.proto.*
 
 /**
  * Returns constructed peer to peer message, which stands, that
@@ -13,6 +10,16 @@ import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
 fun p2pIAmOnlineMsg(userInfo: ChatUserInfo): PeerToPeerMsg {
     return PeerToPeerMsg.newBuilder()
             .setMsgType(PeerToPeerMsg.Type.I_AM_ONLINE)
+            .setUserInfo(userInfo)
+            .build()!!
+}
+
+/**
+ * Message sent to peer server as I AM ONLINE equivalent
+ */
+fun p2pRegisterMsg(userInfo: ChatUserInfo): PeerToPeerMsg {
+    return PeerToPeerMsg.newBuilder()
+            .setMsgType(PeerToPeerMsg.Type.REGISTER)
             .setUserInfo(userInfo)
             .build()!!
 }
@@ -72,5 +79,15 @@ fun p2pDisconnectMsg(): PeerToPeerMsg {
 fun p2pConnectOkMsg(): PeerToPeerMsg {
     return PeerToPeerMsg.newBuilder()
             .setMsgType(PeerToPeerMsg.Type.CONNECT_OK)
+            .build()
+}
+
+/**
+ * Messages, acknowledging, that peer successfully registered in peer-server chat model
+ */
+fun p2pRegistrationOkMsg(users: List<Pair<ChatUserIpAddr, ChatUserInfo>>): PeerToPeerMsg {
+    return PeerToPeerMsg.newBuilder()
+            .setMsgType(PeerToPeerMsg.Type.REGISTRATION_OK)
+            .setUsersList(listToUsersList(users))
             .build()
 }

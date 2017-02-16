@@ -6,6 +6,7 @@ import javafx.collections.FXCollections
 import javafx.geometry.Pos
 import javafx.scene.control.Alert
 import javafx.scene.control.ListView
+import javafx.scene.input.KeyCode
 import javafx.scene.layout.BorderPane
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.client.createChatMessage
@@ -18,18 +19,31 @@ import java.awt.Toolkit
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * View class for messages items
+ */
 data class ChatMsgView(val author: String, val msg: ChatMessage) {
     override fun toString(): String {
         return "[${SimpleDateFormat("hh-mm-ss").format(Date(msg.timestamp))}] $author: ${msg.text}"
     }
 }
 
+/**
+ * View class for user item
+ *
+ * @param name user name
+ * @param id user id for identification through controller
+ * @param hasNotReadMessage flag, if true ==> there are not read messages!
+ */
 data class ChatUserView(val name: String, val id: ChatUserIpAddr, val hasNotReadMessage: Boolean = false) {
     override fun toString(): String {
         return name + (if (hasNotReadMessage) " *" else "")
     }
 }
 
+/**
+ * That is Main Window of chat application; It is based on BorderPane.
+ */
 class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
     companion object {
         val logger = LoggerFactory.getLogger("ChatClientGUI")!!
@@ -67,20 +81,19 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
                 menubar {
                     menu("File") {
                         menuitem("Change server") {
-                            if (controller.serverAddr == null) {
-                                ChooseServerDialog("localhost", 555).openModal()
-                            } else {
-                                ChooseServerDialog(controller.serverAddr!!.hostName,
-                                        controller.serverAddr!!.port).openModal()
-                            }
+                            val p = controller.getServerPeerAddr()
+                            ChooseServerDialog(p.first, p.second).openModal()
                         }
                         menuitem("User profile") {
-                            ChangeUserInfoDialog(controller.getMyInfo()).openModal()
+                            ChangeUserInfoDialog(
+                                    controller.getMyInfo(),
+                                    controller.getMyId()).openModal()
                         }
                     }
                 }
             }
             center {
+                setOnKeyPressed { if (it.code == KeyCode.ENTER) sendMessageBtnPressed() }
                 borderpane {
                     center {
                         listview(messageList) { }
@@ -109,13 +122,13 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
         }
     }
 
-
     private fun sendMessageBtnPressed() {
         val message = messageFieldText.get()
         if (activeUser == null) {
             alert(Alert.AlertType.WARNING, "Info", "No chat selected")
             return
         }
+        messageFieldText.set("")
         controller.sendMessage(activeUser!!, createChatMessage(message))
     }
 
@@ -131,7 +144,7 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
             val sz = Math.min(50, messages.size)
             messages.takeLast(sz).forEach {
                 messageList.add(ChatMsgView(
-                        if (it.first == user.id && user.id != controller.getMyId()!!) user.name else "You",
+                        if (it.first == user.id && user.id != controller.getMyId()) user.name else "You",
                         it.second
                 ))
             }
@@ -141,13 +154,13 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
     }
 
     /*
-        Unforunately every chat event handler must be inside `Platform.runLater`, because
+        Unfortunately every chat event handler must be inside `Platform.runLater`, because
         chat works asynchronously and may execute them in non FX thread
      */
 
     override fun userBecomeOnline(userId: ChatUserIpAddr, userInfo: ChatUserInfo) {
         Platform.runLater {
-            val userView = if (userId == controller.getMyId()!!) {
+            val userView = if (userId == controller.getMyId()) {
                 ChatUserView(userInfo.name + " [ YOU ]", userId, false)
             } else {
                 ChatUserView(userInfo.name, userId, false)
@@ -215,7 +228,7 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
             logger.debug("This client info changed;")
             changeUserInList(newUserView = ChatUserView(
                     newInfo.name + " [ YOU ]",
-                    controller.getMyId()!!,
+                    controller.getMyId(),
                     usersList.find { it.id == controller.getMyId() }!!.hasNotReadMessage))
         }
     }

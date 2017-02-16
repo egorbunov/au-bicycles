@@ -1,6 +1,7 @@
 package ru.mit.spbau.sd.chat.client.net
 
 import org.slf4j.LoggerFactory
+import ru.mit.spbau.sd.chat.client.model.ChatModelInterface
 import ru.mit.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mit.spbau.sd.chat.commons.*
 import ru.spbau.mit.sd.commons.proto.ChatMessage
@@ -10,14 +11,20 @@ import java.util.*
 import java.util.concurrent.CountDownLatch
 
 /**
- * ChatNetworkInterface implementation
+ * Class, which provides access to network-dependent part of the chat application.
+ * It is responsible for correct initialization of current client in p2p-chat
+ * network, correct de-initialization and all that.
+ *
  *
  * @param clientId - this client id; we need it to protect client from connecting to itself
+ * @param usersConnManager - interface for establishing user-connections
  */
 internal open class ChatNetworkShield(
         private val clientId: ChatUserIpAddr,
-        private val chatServerService: ChatServerService,
-        private val usersConnManager: UsersConnectionManager) :
+        private val usersConnManager: UsersConnectionManager,
+        private val chatBootsrapper: IChatBootsrapper,
+        private val chatModelInterface: ChatModelInterface<ChatUserIpAddr>) :
+
         ChatNetworkInterface {
 
     val logger = LoggerFactory.getLogger("NetShield[${clientId.port}]")!!
@@ -25,6 +32,9 @@ internal open class ChatNetworkShield(
     private val listeners = ArrayList<ClientLifecycleListener>()
 
     /**
+     * Adds new client lifecycle listener to be notified for events like
+     * "client started" and "client stopped"
+     *
      * @param listener instance, which will be notified about completion
      *        of any client lifecycle specific operation
      */
@@ -32,98 +42,65 @@ internal open class ChatNetworkShield(
         listeners.add(listener)
     }
 
-    fun removeClientLifecycleListener(listener: ClientLifecycleListener) {
-        listeners.remove(listener)
+
+    /**
+     * Bootstraps the client telling every online chat-user, that we
+     * are now available for chatting
+     */
+    override fun startClient(clientInfo: ChatUserInfo) {
+        val initialUsers = chatBootsrapper.registerInDaChat(clientId, clientInfo)
+        // special filtering needed, because we don't need to tell server peer that we
+        // are online
+        val filteredList = initialUsers.filter {
+            it.first != clientId && it.first != chatBootsrapper.peerServerId()
+        }
+
+        for ((userId) in filteredList) {
+            val conn = usersConnManager.connectToUser(userId)
+            conn.writeMessageSync(p2pIAmOnlineMsg(clientInfo))
+//            usersConnManager.disconnectUser(userId)
+        }
+        listeners.forEach { it.clientStarted(initialUsers) }
     }
 
     /**
-     * Sending "I'am online" message to server and to
+     * Tells to each peer, which is available from current user model,
+     * that this user is now not available (offline)
      */
-    override fun startClient(clientInfo: ChatUserInfo): AsyncFuture<Unit> {
-        val usersList = chatServerService.startChatting().get()
+    override fun stopClient() {
+        val usersList = chatModelInterface.getAllUsers()
         val filteredList = usersList.filter { it.first != clientId }
-        val countdown = CountDownLatch(filteredList.size)
-        for ((userId) in filteredList) {
-            usersConnManager.connectToUser(
-                    userId,
-                    onComplete = { server ->
-                        server.writeMessage(p2pIAmOnlineMsg(clientInfo))
-                        usersConnManager.disconnectUser(userId)
-                        countdown.countDown()
-                    },
-                    onFail = {
-                        logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
-                        countdown.countDown()
-                    }
-            )
-        }
-        listeners.forEach { it.clientStarted(usersList) }
 
-        return object: AsyncFuture<Unit> {
-            override fun get() {
-                countdown.await()
-            }
-        }
-    }
-
-    override fun stopClient(): AsyncFuture<Unit> {
-        chatServerService.stopChatting()
-        val usersList = chatServerService.getUsers().get()
-        val filteredList = usersList.filter { it.first != clientId }
-        val countdown = CountDownLatch(filteredList.size)
         for ((userId) in filteredList) {
-            usersConnManager.connectToUser(
-                    userId,
-                    onComplete = { server ->
-                        server.writeMessage(p2pIAmGoneOfflineMsg())
-                        usersConnManager.disconnectUser(userId)
-                        countdown.countDown()
-                    },
-                    onFail = {
-                        logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
-                        countdown.countDown()
-                    }
-            )
+            val conn = usersConnManager.connectToUser(userId)
+            conn.writeMessageSync(p2pIAmGoneOfflineMsg())
+//            usersConnManager.disconnectUser(userId)
         }
         listeners.forEach { it.clientStopped() }
-
-        return object: AsyncFuture<Unit> {
-            override fun get() {
-                countdown.await()
-            }
-        }
     }
 
+    /**
+     * Establishes connection with peer (if needed) and sends chat message to him
+     */
     override fun sendChatMessage(userId: ChatUserIpAddr, msg: ChatMessage) {
         if (userId == clientId) {
             return
         }
-        usersConnManager.connectToUser(
-                userId,
-                onComplete = { conn ->
-                    conn.writeMessage(p2pTextMessageMsg(msg))
-                },
-                onFail = {
-                    logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
-                }
-        )
+        val conn = usersConnManager.connectToUser(userId)
+        conn.writeMessage(p2pTextMessageMsg(msg))
     }
 
+    /**
+     * Notifies every available peer (accordingly to chat model interface),
+     * that this user changed it's info!
+     */
     override fun changeClientInfo(newInfo: ChatUserInfo) {
-        chatServerService.changeClientInfo(newInfo)
-        val usersList = chatServerService.getUsers().get()
+        val usersList = chatModelInterface.getAllUsers()
         val filteredList = usersList.filter { it.first != clientId }
         for ((userId) in filteredList) {
-            usersConnManager.connectToUser(
-                    userId,
-                    onComplete = { server ->
-                        server.writeMessage(p2pMyInfoChangedMsg(newInfo))
-                        usersConnManager.disconnectUser(userId)
-                    },
-                    onFail = {
-                        logger.error("User [${userId.ip}:${userId.port}] connect failed: $it")
-                    }
-            )
+            val conn = usersConnManager.connectToUser(userId)
+            conn.writeMessageSync(p2pMyInfoChangedMsg(newInfo))
+//            usersConnManager.disconnectUser(userId)
         }
     }
 }

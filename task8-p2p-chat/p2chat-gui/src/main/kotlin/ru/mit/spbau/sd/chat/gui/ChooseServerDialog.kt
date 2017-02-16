@@ -2,11 +2,12 @@ package ru.mit.spbau.sd.chat.gui
 
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.scene.input.KeyCode
 import tornadofx.*
 
 
 /**
- * Server settings edit dialog
+ * Peer server settings edit dialog
  */
 class ChooseServerDialog(host: String, port: Int): Fragment() {
     override val root = Form()
@@ -14,10 +15,12 @@ class ChooseServerDialog(host: String, port: Int): Fragment() {
     val serverPort = SimpleIntegerProperty(port)
 
     init {
-        title = "Change server address"
+        title = "Change server peer address"
 
         with (root) {
-            fieldset("Server settings") {
+            prefHeight = 200.0
+            prefWidth = 300.0
+            fieldset("Peer-server settings") {
                 field("address") {
                     textfield().bind(serverAddrProp)
                 }
@@ -26,13 +29,18 @@ class ChooseServerDialog(host: String, port: Int): Fragment() {
                 }
             }
 
+            setOnKeyPressed { if (it.code == KeyCode.ENTER) setServer() }
             button("Save") {
                 setOnAction {
-                    fire(NewServerChosenEvent(serverAddrProp.get(), serverPort.get()))
-                    closeModal()
+                    setServer()
                 }
                 disableProperty().bind(serverAddrProp.isNull)
             }
         }
+    }
+
+    fun setServer() {
+        fire(NewPeerServerChosenEvent(serverAddrProp.get(), serverPort.get()))
+        closeModal()
     }
 }

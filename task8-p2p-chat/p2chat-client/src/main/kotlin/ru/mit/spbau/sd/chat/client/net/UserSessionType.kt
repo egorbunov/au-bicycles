@@ -1,9 +1,13 @@
 package ru.mit.spbau.sd.chat.client.net
 
 /**
- * Created by: Egor Gorbunov
- * Date: 2/12/17
- * Email: egor-mailbox@ya.com
+ * Due to peer2peer architecture users may establish
+ * connection in two ways, and we distinguish for current
+ * client whenever it connects to other client or if
+ * other client connects on it's purpose to this client.
+ *
+ * Our protocol specifies that Client, which initiates connection
+ * must send "DISCONNECT" message at the end of the session.
  */
 enum class UserSessionType {
     ESTABLISHED_REMOTELY,

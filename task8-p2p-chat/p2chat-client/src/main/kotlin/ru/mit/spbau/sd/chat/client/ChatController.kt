@@ -41,15 +41,15 @@ class ChatController internal constructor(
     /**
      * This call is propagated to `networkShield`
      */
-    fun startClient(): AsyncFuture<Unit> {
-        return networkShield.startClient(chatModel.clientInfo)
+    fun startClient() {
+        networkShield.startClient(chatModel.clientInfo)
     }
 
     /**
      * This call is propagated to `networkShield` too.
      */
-    fun stopClient(): AsyncFuture<Unit> {
-        return networkShield.stopClient()
+    fun stopClient(){
+        networkShield.stopClient()
     }
 
     /**

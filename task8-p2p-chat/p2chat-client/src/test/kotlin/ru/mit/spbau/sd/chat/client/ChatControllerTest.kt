@@ -1,9 +1,6 @@
 package ru.mit.spbau.sd.chat.client
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.doReturn
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.verify
+import com.nhaarman.mockito_kotlin.*
 import org.junit.Test
 import org.mockito.Mockito
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
@@ -17,14 +14,9 @@ import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 
 open class ChatControllerTest {
     private fun getNetShieldMock(): ChatNetworkShield {
-        val asyncF = object: AsyncFuture<Unit> {
-            override fun get() {
-            }
-        }
-
         val netShield: ChatNetworkShield = mock {
-            on { startClient(any()) } doReturn asyncF
-            on { stopClient() } doReturn asyncF
+            on { startClient(any()) } doThrow RuntimeException()
+            on { stopClient() } doThrow RuntimeException()
         }
         Mockito.doNothing().`when`(netShield).changeClientInfo(any())
         Mockito.doNothing().`when`(netShield).sendChatMessage(any(), any())
@@ -39,7 +31,9 @@ open class ChatControllerTest {
         val chatModel: ChatModel<ChatUserIpAddr> = ChatModel(clientId, clientUserInfo)
         val chatController = ChatController(netShield, chatModel)
 
-        chatController.startClient()
+        try {
+            chatController.startClient()
+        } catch (e: Exception) {}
         verify(netShield).startClient(chatModel.clientInfo)
 
 
@@ -47,14 +41,20 @@ open class ChatControllerTest {
         val message = ChatMessage.newBuilder().setText("hello").build()!!
         chatModel.addUser(userId, ChatUserInfo.getDefaultInstance())
 
-        chatController.sendTextMessage(userId, message)
+        try {
+            chatController.sendTextMessage(userId, message)
+        } catch (e: Exception) {}
         verify(netShield).sendChatMessage(userId, message)
 
         val newInfo = ChatUserInfo.newBuilder().setName("Mike").build()!!
-        chatController.changeClientInfo(newInfo)
+        try {
+            chatController.changeClientInfo(newInfo)
+        } catch (e: Exception) {}
         verify(netShield).changeClientInfo(newInfo)
 
-        chatController.stopClient()
+        try {
+            chatController.stopClient()
+        } catch (e: Exception) {}
         verify(netShield).stopClient()
     }
 
@@ -73,7 +73,9 @@ open class ChatControllerTest {
                 Pair(createClient("xxx", 123), createInfo("name1")),
                 Pair(createClient("yyy", 231), createInfo("Tom"))
         )
-        controller.clientStarted(users)
+        try {
+            controller.clientStarted(users)
+        } catch (e: Exception) {}
         for ((id, info) in users) {
             verify(usersEventListener).userBecomeOnline(id, info)
         }

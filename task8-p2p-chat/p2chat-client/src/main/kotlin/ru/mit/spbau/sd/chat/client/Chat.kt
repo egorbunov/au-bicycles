@@ -3,9 +3,12 @@ package ru.mit.spbau.sd.chat.client
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
 import ru.mit.spbau.sd.chat.client.model.ChatModel
+import ru.mit.spbau.sd.chat.client.model.ChatModelInterface
 import ru.mit.spbau.sd.chat.client.net.*
 import ru.mit.spbau.sd.chat.commons.AsyncFuture
+import ru.mit.spbau.sd.chat.commons.inetSockAddrToUserIp
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionAcceptor
+import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -16,10 +19,13 @@ import java.nio.channels.AsynchronousServerSocketChannel
 /**
  * Class, which provides high-level interface to client side of the chat
  *
- * @param serverAddress chat server address
+ * @param serverPeerAddress address of the peer, which will provide
+ *        knowledge about chat users to this new chat client. If serverPeerAddress
+ *        is null when this chat client will be the server to itself
+ *
  * @param clientInfo this chat user information
  */
-class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
+class Chat(clientInfo: ChatUserInfo, val serverPeerAddress: SocketAddress? = null) {
     companion object {
         val logger = LoggerFactory.getLogger(Chat::class.java.name)!!
     }
@@ -41,11 +47,22 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
         logger.debug("Client id = $clientId")
 
 
-        val chatServerService = ChatServerService(serverAddress, clientId, clientInfo)
-        sessionController = UsersSessionsController(clientId)
-        val usersConnManager = UsersConnectionManager(clientId, sessionController)
-        val networkShield = ChatNetworkShield(clientId, chatServerService, usersConnManager)
         chatModel = ChatModel(clientId, clientInfo)
+        val bootstrapper = if (serverPeerAddress != null && serverPeerAddress != userIpToSockAddr(clientId)) {
+            ChatBootsrapper(serverPeerAddress as InetSocketAddress)
+        } else {
+            DummyChatBootstrapper(clientId)
+        }
+
+        val chatModelInterface = ChatModelInterface(chatModel)
+        sessionController = UsersSessionsController(clientId, chatModelInterface)
+        val usersConnManager = UsersConnectionManager(clientId, sessionController)
+        val networkShield = ChatNetworkShield(
+                clientId,
+                usersConnManager,
+                bootstrapper,
+                chatModelInterface
+        )
 
         // main class
         controller = ChatController(networkShield, chatModel)
@@ -64,11 +81,10 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
     /**
      * This call is propagated to `networkShield`
      */
-    fun startClient(): AsyncFuture<Unit> {
+    fun startClient() {
         logger.debug("Starting chat client...")
-        val ret = controller.startClient()
+        controller.startClient()
         usersConnectionAcceptor.start()
-        return ret
     }
 
     /**
@@ -111,5 +127,12 @@ class Chat(serverAddress: SocketAddress, clientInfo: ChatUserInfo) {
      */
     fun getMessagesWithUser(userId: ChatUserIpAddr): List<Pair<ChatUserIpAddr, ChatMessage>> {
         return chatModel.getMessages(userId)
+    }
+
+    /**
+     * Returns this client address, at which it listening for other peers
+     */
+    fun getAddress(): SocketAddress {
+        return usersConnectionAcceptor.getAddress()
     }
 }

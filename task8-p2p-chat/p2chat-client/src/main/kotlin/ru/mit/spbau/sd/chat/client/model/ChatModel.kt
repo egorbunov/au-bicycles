@@ -21,7 +21,6 @@ class ChatModel<T>(
     private val usersMap: MutableMap<T, ChatUserInfo> = ConcurrentHashMap()
 
 
-
     private fun createEmptyMsgBox(): MutableList<Pair<T, ChatMessage>> {
         return ArrayList()
     }
@@ -53,7 +52,8 @@ class ChatModel<T>(
      */
     fun removeUser(userId: T) {
         if (userId !in usersMap) {
-            throw ChatUserDoesNotExists("$userId")
+            return
+//            throw ChatUserDoesNotExists("$userId")
         }
         usersMap.remove(userId)
         usersMsgBoxes.remove(userId)
@@ -100,11 +100,11 @@ class ChatModel<T>(
     /**
      * Get message history with given recipient/sender
      */
-    fun getMessages(recepient: T): List<Pair<T, ChatMessage>> {
-        if (recepient !in usersMap) {
-            throw ChatUserDoesNotExists("$recepient")
+    fun getMessages(recipient: T): List<Pair<T, ChatMessage>> {
+        if (recipient !in usersMap) {
+            throw ChatUserDoesNotExists("$recipient")
         }
-        return usersMsgBoxes[recepient]!!
+        return usersMsgBoxes[recipient]!!
     }
 
     /**
@@ -112,6 +112,9 @@ class ChatModel<T>(
      */
     fun changeClientInfo(newInfo: ChatUserInfo) {
         clientInfo = newInfo
+        if (clientId in usersMap) {
+            usersMap[clientId] = clientInfo
+        }
     }
 
     /**
@@ -120,5 +123,12 @@ class ChatModel<T>(
     fun clear() {
         usersMsgBoxes.clear()
         usersMap.clear()
+    }
+
+    /**
+     * Returns users without current chat model owner
+     */
+    fun getUsersWithoutThis(): List<Pair<T, ChatUserInfo>> {
+        return getUsers().filter { it != clientId }
     }
 }

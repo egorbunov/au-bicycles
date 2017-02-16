@@ -16,7 +16,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 
 task copyJars(type: Copy) {
-    def jarProjects = [project(':p2chat-gui'), project(':p2chat-server')]
+    def jarProjects = [project(':p2chat-gui')]
     from jarProjects.collect() { it.tasks.withType(Jar) }
     into "$buildDir/jars"
 }

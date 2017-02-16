@@ -28,33 +28,6 @@ message ChatMessage {
     string text = 2;
 }
 
-message PeerToServerMsg {
-    enum Type {
-        CONNECT = 0; // peer sends this message at the start of session, providing it's id
-        PEER_ONLINE = 1;
-        PEER_GONE_OFFLINE = 2;
-        GET_AVAILABLE_USERS = 3;
-        MY_INFO_CHANGED = 4;
-        DISCONNECT = 5; // message designating end of server-peer session, that does not mean,
-                        // that peer gone offline, but it just don't want to hold server connection
-    }
-
-    Type msgType = 1;
-    ChatUserIpAddr userId = 2; // id is ip address, with which user can be reached by others
-    ChatUserInfo userInfo = 3;
-}
-
-message ServerToPeerMsg {
-    enum Type {
-        AVAILABLE_USERS = 0;   // answer to GET_USERS request from peer
-        CONNECT_OK = 1; // Answer to peer's CONNECT message
-    }
-
-    Type msgType = 1;
-    // this field is filled only in case of USERS_INFO_DATA msg type
-    UsersList users = 2;
-}
-
 message PeerToPeerMsg {
     enum Type {
         CONNECT = 0;
@@ -64,9 +37,13 @@ message PeerToPeerMsg {
         I_AM_GONE_OFFLINE = 4;
         DISCONNECT = 5;
         CONNECT_OK = 6; // answer to CONNECT
+        REGISTER = 7;
+        REGISTRATION_OK = 8; // answer to REGISTER
+
     }
     Type msgType = 1;
     ChatMessage message = 2;
     ChatUserIpAddr userFromId = 3;
     ChatUserInfo userInfo = 4;
+    UsersList usersList = 5; // sent as answer to I_AM_ONLINE
 }

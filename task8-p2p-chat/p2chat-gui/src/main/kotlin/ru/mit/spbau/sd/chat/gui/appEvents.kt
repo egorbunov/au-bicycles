@@ -10,6 +10,6 @@ import tornadofx.FXEvent
 class ThisClientInfoChangedEvent(val newInfo: ChatUserInfo): FXEvent()
 
 /**
- * Event, which is fired when user changes server settings through UI
+ * Event, which is fired when user changes peer-server settings through UI
  */
-class NewServerChosenEvent(val host: String, val port: Int): FXEvent()
+class NewPeerServerChosenEvent(val host: String, val port: Int): FXEvent()
