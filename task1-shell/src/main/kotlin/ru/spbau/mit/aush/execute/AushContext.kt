@@ -1,5 +1,7 @@
 package ru.spbau.mit.aush.execute
 
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 
 /**
@@ -12,7 +14,11 @@ class AushContext private constructor() {
     private var lastExitCode: Int = 0
 
     init {
-        val workDir = System.getProperty("user.dir")
+        val workDir = if (System.getenv().containsKey(SpecialVars.PWD.name)) {
+            System.getenv(SpecialVars.PWD.name)
+        } else {
+            System.getProperty("user.dir")
+        }
         addVar(SpecialVars.PATH.name, workDir)
         addVar(SpecialVars.PWD.name, workDir)
     }
@@ -21,6 +27,16 @@ class AushContext private constructor() {
 
     companion object {
         val instance: AushContext by lazy { instanceHolder.instance }
+    }
+
+    fun getPwd(): Path = Paths.get(getVar(SpecialVars.PWD))
+
+    fun getRootDir(): Path {
+        var root = getPwd()
+        while (root.parent != null) {
+            root = root.parent
+        }
+        return root
     }
 
     /**

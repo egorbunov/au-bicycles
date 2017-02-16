@@ -8,7 +8,6 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 
 /**
  * @author Anton Mordberg
@@ -28,17 +27,16 @@ class CdExecutor : CmdExecutor() {
             throw BadCmdArgsError("You must specify a directory")
         }
 
-        val newDir = Paths.get(args.first())
+        val absolutePath = AushContext.instance.getRootDir().resolve(args.first())
+        val relativePath = AushContext.instance.getPwd().resolve(args.first())
 
-        if (isValidDir(newDir)) {
+        if (isValidDir(absolutePath)) {
             logger.info("Using absolute path to cd")
-            cd(newDir)
+            cd(absolutePath)
         } else {
-            val currentDir = Paths.get(AushContext.instance.getVar(SpecialVars.PWD))
-            val relativeDir = currentDir.resolve(newDir)
-            if (isValidDir(relativeDir)) {
+            if (isValidDir(relativePath)) {
                 logger.info("Using relative path to cd")
-                cd(relativeDir)
+                cd(relativePath)
             } else {
                 logger.info("Failed to change dir")
                 throw BadCmdArgsError("No such directory")
@@ -53,7 +51,7 @@ class CdExecutor : CmdExecutor() {
 
     private fun cd(dir: Path) {
         val absolutePath = dir.toAbsolutePath().normalize().toString()
-        AushContext.instance.addVar(SpecialVars.PWD.name, absolutePath)
+        AushContext.instance.addVar(SpecialVars.PWD, absolutePath)
         logger.info("Changed directory to $absolutePath")
     }
 }

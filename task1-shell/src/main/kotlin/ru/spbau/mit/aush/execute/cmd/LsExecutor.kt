@@ -1,7 +1,6 @@
 package ru.spbau.mit.aush.execute.cmd
 
 import ru.spbau.mit.aush.execute.AushContext
-import ru.spbau.mit.aush.execute.SpecialVars
 import ru.spbau.mit.aush.execute.error.BadCmdArgsError
 import ru.spbau.mit.aush.log.Logging
 import java.io.BufferedWriter
@@ -25,15 +24,14 @@ class LsExecutor  : CmdExecutor() {
     }
 
     override fun exec(args: List<String>, inStream: InputStream, outStream: OutputStream): Int {
-        val target = if (args.isEmpty()) {
-            AushContext.instance.getVar(SpecialVars.PWD)
+        val targetDir = if (args.isEmpty()) {
+            AushContext.instance.getPwd()
         } else if (args.size == 1) {
-            args.first()
+            Paths.get(args.first())
         } else {
             throw BadCmdArgsError("Too many arguments (you can specify 1 at most)")
         }
 
-        val targetDir = Paths.get(target)
         if (Files.notExists(targetDir)) {
             throw BadCmdArgsError("Specified file or directory was not found")
         }
