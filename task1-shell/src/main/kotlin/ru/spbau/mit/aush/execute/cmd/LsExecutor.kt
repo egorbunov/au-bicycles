@@ -12,6 +12,10 @@ import java.nio.file.Paths
 import java.util.*
 
 /**
+ * This class implements a tool that can list folder content.
+ *
+ * Usage: ls [FILE | FOLDER]
+ *
  * @author Anton Mordberg
  * @since 09.02.17
  */

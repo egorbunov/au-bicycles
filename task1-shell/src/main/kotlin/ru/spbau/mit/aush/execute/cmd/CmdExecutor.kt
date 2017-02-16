@@ -5,7 +5,7 @@ import java.io.OutputStream
 
 
 /**
- * Every AUSH built in command (such as `echo`) executor
+ * Every AUSH™ built in command (such as `echo`) executor
  * must be inherited from `CmdExecutor`
  *
  * WARN: Every executor inherited from `CmdExecutor` *must* have default constructor!

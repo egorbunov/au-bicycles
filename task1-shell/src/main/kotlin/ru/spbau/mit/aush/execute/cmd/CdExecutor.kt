@@ -10,6 +10,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
+ * CD stands for change directory.
+ *
+ * Usage: cd FOLDER
+ *
  * @author Anton Mordberg
  * @since 09.02.17
  */

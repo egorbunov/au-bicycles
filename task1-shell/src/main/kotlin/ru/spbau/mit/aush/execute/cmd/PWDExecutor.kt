@@ -6,7 +6,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 /**
- * user.dir is used as working directory
+ * PWD is used as working directory
  */
 class PWDExecutor : CmdExecutor() {
     override fun name(): String {

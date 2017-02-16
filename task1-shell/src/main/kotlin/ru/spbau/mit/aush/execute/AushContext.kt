@@ -29,8 +29,14 @@ class AushContext private constructor() {
         val instance: AushContext by lazy { instanceHolder.instance }
     }
 
+    /**
+     * @return PWD variable converted to Path.
+     */
     fun getPwd(): Path = Paths.get(getVar(SpecialVars.PWD))
 
+    /**
+     * @return Root path (aka '/').
+     */
     fun getRootDir(): Path {
         var root = getPwd()
         while (root.parent != null) {
