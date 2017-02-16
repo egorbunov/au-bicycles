@@ -30,13 +30,13 @@ class CdExecutor : CmdExecutor() {
         val absolutePath = AushContext.instance.getRootDir().resolve(args.first())
         val relativePath = AushContext.instance.getPwd().resolve(args.first())
 
-        if (isValidDir(absolutePath)) {
-            logger.info("Using absolute path to cd")
-            cd(absolutePath)
+        if (isValidDir(relativePath)) {
+            logger.info("Using relative path to cd")
+            cd(relativePath)
         } else {
-            if (isValidDir(relativePath)) {
-                logger.info("Using relative path to cd")
-                cd(relativePath)
+            if (isValidDir(absolutePath)) {
+                logger.info("Using absolute path to cd")
+                cd(absolutePath)
             } else {
                 logger.info("Failed to change dir")
                 throw BadCmdArgsError("No such directory")
