@@ -93,6 +93,7 @@ class TestChatServerOneClientInteraction {
         verify(l2).userBecomeOnline(c1.getMyId(), c1.getMyInfo())
 
         c1.stopClient()
+        Thread.sleep(100)
         c2.stopClient()
 
         Thread.sleep(100)
@@ -119,6 +120,7 @@ class TestChatServerOneClientInteraction {
         verify(l2).userBecomeOnline(c1.getMyId(), c1.getMyInfo())
 
         c1.stopClient()
+        Thread.sleep(100)
         c2.stopClient()
 
         Thread.sleep(100)
@@ -153,6 +155,7 @@ class TestChatServerOneClientInteraction {
         verify(l1).messageReceived(c2.getMyId(), m21)
 
         c1.stopClient()
+        Thread.sleep(100)
         c2.stopClient()
     }
 
@@ -181,6 +184,7 @@ class TestChatServerOneClientInteraction {
         verify(l2).userChanged(c1.getMyId(), newInfo1)
 
         c1.stopClient()
+        Thread.sleep(100)
         c2.stopClient()
     }
 
