@@ -5,6 +5,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import ru.mit.spbau.sd.chat.commons.net.*
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
@@ -71,7 +72,7 @@ class AsyncServerIOTest {
 
         // server side acceptor
         val connAcceptor = AsyncConnectionAcceptor(
-                AsynchronousServerSocketChannel.open().bind(InetSocketAddress(0)),
+                AsynchronousServerSocketChannel.open().bind(InetSocketAddress(InetAddress.getLocalHost(), 0)),
                 serverConnListener
         )
         connAcceptor.start()

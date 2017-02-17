@@ -10,6 +10,7 @@ import ru.mit.spbau.sd.chat.commons.p2pTextMessageMsg
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
+import java.io.IOException
 import java.util.*
 
 /**
@@ -59,7 +60,11 @@ internal open class ChatNetworkShield(
 
         for ((userId) in filteredList) {
             val conn = usersConnManager.connectToUser(userId)
-            conn.writeMessageSync(p2pIAmOnlineMsg(clientInfo))
+            try {
+                conn.writeMessageSync(p2pIAmOnlineMsg(clientInfo))
+            } catch (e: IOException) {
+                logger.error("Can't write I_AM_ONLINE to client ${userId.ip}:${userId.port}: $e")
+            }
 //            usersConnManager.disconnectUser(userId)
         }
         listeners.forEach { it.clientStarted(initialUsers) }
@@ -74,8 +79,12 @@ internal open class ChatNetworkShield(
         val filteredList = usersList.filter { it.first != clientId }
 
         for ((userId) in filteredList) {
-            val conn = usersConnManager.connectToUser(userId)
-            conn.writeMessageSync(p2pIAmGoneOfflineMsg())
+            try {
+                val conn = usersConnManager.connectToUser(userId)
+                conn.writeMessageSync(p2pIAmGoneOfflineMsg())
+            } catch (e: IOException) {
+                logger.error("Can't write I_AM_GONE_OFFLINE to client ${userId.ip}:${userId.port}: $e")
+            }
 //            usersConnManager.disconnectUser(userId)
         }
         listeners.forEach { it.clientStopped() }
@@ -88,8 +97,12 @@ internal open class ChatNetworkShield(
         if (userId == clientId) {
             return
         }
-        val conn = usersConnManager.connectToUser(userId)
-        conn.writeMessage(p2pTextMessageMsg(msg))
+        try {
+            val conn = usersConnManager.connectToUser(userId)
+            conn.writeMessage(p2pTextMessageMsg(msg))
+        } catch (e: Exception) {
+            logger.error("Can't send message to client ${userId.ip}:${userId.port}: $e")
+        }
     }
 
     /**
@@ -100,8 +113,12 @@ internal open class ChatNetworkShield(
         val usersList = chatModelInterface.getAllUsers()
         val filteredList = usersList.filter { it.first != clientId }
         for ((userId) in filteredList) {
-            val conn = usersConnManager.connectToUser(userId)
-            conn.writeMessageSync(p2pMyInfoChangedMsg(newInfo))
+            try {
+                val conn = usersConnManager.connectToUser(userId)
+                conn.writeMessageSync(p2pMyInfoChangedMsg(newInfo))
+            } catch (e: IOException) {
+                logger.error("Can't write MY_INFO_CAHNGED to client ${userId.ip}:${userId.port}: $e")
+            }
 //            usersConnManager.disconnectUser(userId)
         }
     }

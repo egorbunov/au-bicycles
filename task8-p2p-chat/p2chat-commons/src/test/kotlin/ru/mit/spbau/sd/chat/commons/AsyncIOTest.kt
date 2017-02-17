@@ -6,6 +6,7 @@ import ru.mit.spbau.sd.chat.commons.net.asyncRead
 import ru.mit.spbau.sd.chat.commons.net.asyncWrite
 import ru.mit.spbau.sd.chat.commons.net.createStartReadingState
 import ru.mit.spbau.sd.chat.commons.net.createStartWritingState
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel
@@ -16,7 +17,7 @@ class AsyncIOTest {
 
     init {
         val acceptingSock = AsynchronousServerSocketChannel.open()
-        acceptingSock.bind(InetSocketAddress(0))
+        acceptingSock.bind(InetSocketAddress(InetAddress.getLocalHost(), 0))
         val connFuture = acceptingSock.accept()!!
         clientSock.connect(acceptingSock.localAddress)
         serverSock = connFuture.get()!!

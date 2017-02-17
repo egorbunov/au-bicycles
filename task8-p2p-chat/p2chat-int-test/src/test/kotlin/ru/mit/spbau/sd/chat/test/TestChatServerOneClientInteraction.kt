@@ -10,6 +10,8 @@ import org.mockito.internal.verification.Times
 import ru.mit.spbau.sd.chat.client.Chat
 import ru.mit.spbau.sd.chat.client.createChatMessage
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
+import ru.mit.spbau.sd.chat.commons.inetSockAddrToUserIp
+import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -79,6 +81,32 @@ class TestChatServerOneClientInteraction {
         val l1 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c1.addChatEventListener(l1)
         val c2 = createClient("Bob", c1.getAddress())
+        val l2 = mock<ChatEventsListener<ChatUserIpAddr>>()
+        c2.addChatEventListener(l2)
+
+        c1.startClient()
+        c2.startClient()
+
+        Thread.sleep(100)
+
+        verify(l1).userBecomeOnline(c2.getMyId(), c2.getMyInfo())
+        verify(l2).userBecomeOnline(c1.getMyId(), c1.getMyInfo())
+
+        c1.stopClient()
+        c2.stopClient()
+
+        Thread.sleep(100)
+
+        verify(l1).userGoneOffline(c2.getMyId())
+        verify(l2).userGoneOffline(c1.getMyId())
+    }
+
+    @Test
+    fun testTwoClientsAddressing() {
+        val c1 = createClient("Alice")
+        val l1 = mock<ChatEventsListener<ChatUserIpAddr>>()
+        c1.addChatEventListener(l1)
+        val c2 = createClient("Bob",  userIpToSockAddr(c1.getMyId()))
         val l2 = mock<ChatEventsListener<ChatUserIpAddr>>()
         c2.addChatEventListener(l2)
 

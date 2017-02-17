@@ -4,6 +4,9 @@ import javafx.application.Platform
 import javafx.scene.control.Alert
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.client.Chat
+import ru.mit.spbau.sd.chat.commons.hostPortConvertToUserIp
+import ru.mit.spbau.sd.chat.commons.inetSockAddrToUserIp
+import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -61,6 +64,7 @@ class ChatUIController(val mainWindow: MainWindow,
     }
 
     private fun fallbackToDefaultPeerServer() {
+        logger.debug("Falling back to initial peer-server...")
         chatBackend = Chat(userInfo)
         startClientBackend()
     }
@@ -74,7 +78,7 @@ class ChatUIController(val mainWindow: MainWindow,
                 fallbackToDefaultPeerServer()
             }
             Platform.runLater {
-                alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server")
+                alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server: $e")
             }
         }
     }
@@ -117,13 +121,15 @@ class ChatUIController(val mainWindow: MainWindow,
      */
     fun newPeerServerChosen(host: String?, port: Int) {
         try {
-            peerServerAddress = InetSocketAddress(host, port)
+            logger.debug("New host: $host, new port = $port")
+            peerServerAddress =  userIpToSockAddr(hostPortConvertToUserIp(host!!, port))
+            logger.debug("New server address = $peerServerAddress")
             chatBackend.stopClient()
             chatBackend = Chat(userInfo, peerServerAddress)
             startClientBackend()
         } catch (e: Exception) {
             fallbackToDefaultPeerServer()
-            alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server addr")
+            alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server addr: $e")
         }
     }
 

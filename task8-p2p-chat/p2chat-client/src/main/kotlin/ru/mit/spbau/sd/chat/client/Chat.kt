@@ -10,6 +10,7 @@ import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
+import java.net.InetAddress
 import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
@@ -35,7 +36,7 @@ class Chat(clientInfo: ChatUserInfo, val serverPeerAddress: SocketAddress? = nul
 
     init {
         val usersConnectionsAcceptingSocket = AsynchronousServerSocketChannel.open()
-        usersConnectionsAcceptingSocket.bind(InetSocketAddress(0))
+        usersConnectionsAcceptingSocket.bind(InetSocketAddress(InetAddress.getLocalHost(), 0))
         val clientLocalAddr = usersConnectionsAcceptingSocket.localAddress as InetSocketAddress
         logger.debug("Client local address = $clientLocalAddr")
         val clientId = ChatUserIpAddr.newBuilder()

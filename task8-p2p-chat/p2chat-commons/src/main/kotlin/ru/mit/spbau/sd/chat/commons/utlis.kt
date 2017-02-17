@@ -13,6 +13,16 @@ fun intSizeInBytes(): Int {
 }
 
 /**
+ * Builds ChatUserIpAddr from host ip string and port number
+ */
+fun hostPortConvertToUserIp(host: String, port: Int): ChatUserIpAddr {
+    return ChatUserIpAddr.newBuilder()
+            .setIp(host)
+            .setPort(port)
+            .build()!!
+}
+
+/**
  * Converts given inet socket address to protobuf `ChatUserIpAddr` struct
  */
 fun inetSockAddrToUserIp(addr: InetSocketAddress): ChatUserIpAddr {

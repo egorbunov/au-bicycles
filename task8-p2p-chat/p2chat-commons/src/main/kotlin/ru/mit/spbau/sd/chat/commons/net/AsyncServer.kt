@@ -9,6 +9,7 @@ import ru.mit.spbau.sd.chat.commons.net.state.WritingIsDone
 import ru.mit.spbau.sd.chat.commons.net.state.WritingState
 import java.nio.channels.AsynchronousSocketChannel
 import java.util.*
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.locks.ReentrantLock
 
 /**
@@ -48,7 +49,7 @@ import java.util.concurrent.locks.ReentrantLock
  * @param T - type of message read from channel (request type)
  * @param U - type of message written to channel (response type)
  */
-open class AsyncServer<out T, in U, out A>(private val channel: AsynchronousSocketChannel,
+open class AsyncServer<out T, in U, out A>(val channel: AsynchronousSocketChannel,
                                            private val createReadingState: () -> ReadingState<T>,
                                            private val createWritingState: (msg: U) -> WritingState,
                                            private val messageListener: MessageListener<T, AsyncServer<T, U, A>>,
@@ -225,7 +226,11 @@ open class AsyncServer<out T, in U, out A>(private val channel: AsynchronousSock
             }
             var wrState = createWritingState(msg)
             while (wrState !is WritingIsDone) {
-                channel.write(wrState.getBuffer()).get()
+                try {
+                    channel.write(wrState.getBuffer()).get()
+                } catch (e: ExecutionException) {
+                    throw e.cause!!
+                }
                 wrState = wrState.proceed()
             }
         } finally {
