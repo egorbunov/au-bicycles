@@ -20,7 +20,6 @@ class ChatModel<T>(
     private val usersMsgBoxes: MutableMap<T, MutableList<Pair<T, ChatMessage>>> = ConcurrentHashMap()
     private val usersMap: MutableMap<T, ChatUserInfo> = ConcurrentHashMap()
 
-
     private fun createEmptyMsgBox(): MutableList<Pair<T, ChatMessage>> {
         return ArrayList()
     }
@@ -112,5 +111,4 @@ class ChatModel<T>(
             usersMap[clientId] = clientInfo
         }
     }
-
 }
