@@ -8,7 +8,6 @@ import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
 import java.net.InetAddress
 import java.net.InetSocketAddress
-import java.net.SocketAddress
 import java.nio.channels.AsynchronousSocketChannel
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit

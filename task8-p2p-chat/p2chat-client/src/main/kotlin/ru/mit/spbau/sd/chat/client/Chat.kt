@@ -5,8 +5,6 @@ import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
 import ru.mit.spbau.sd.chat.client.model.ChatModel
 import ru.mit.spbau.sd.chat.client.model.ChatModelInterface
 import ru.mit.spbau.sd.chat.client.net.*
-import ru.mit.spbau.sd.chat.commons.AsyncFuture
-import ru.mit.spbau.sd.chat.commons.inetSockAddrToUserIp
 import ru.mit.spbau.sd.chat.commons.net.AsyncConnectionAcceptor
 import ru.mit.spbau.sd.chat.commons.userIpToSockAddr
 import ru.spbau.mit.sd.commons.proto.ChatMessage

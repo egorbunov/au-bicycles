@@ -13,7 +13,7 @@ class ReadingStateTest {
     fun testChainedReading() {
         val buf1 = ByteBuffer.allocate(intSizeInBytes())
         var readingState: ReadingState<String> = ChainedReading(buf1) { buf ->
-            val size = Math.max(intSizeInBytes(), buf.getInt())
+            val size = Math.max(intSizeInBytes(), buf.int)
             val buf2 = ByteBuffer.allocate(size)
             ChainedReading(buf2) { buf ->
                 val strLen = Math.abs(buf.getInt(0))

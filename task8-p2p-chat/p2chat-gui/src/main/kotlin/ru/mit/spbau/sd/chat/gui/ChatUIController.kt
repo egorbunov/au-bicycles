@@ -4,7 +4,6 @@ import javafx.application.Platform
 import javafx.scene.control.Alert
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.client.Chat
-import ru.mit.spbau.sd.chat.commons.inetSockAddrToUserIp
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -38,28 +37,31 @@ class ChatUIController(val mainWindow: MainWindow,
         /**
          * Listening to peer-server update events from UI
          */
-        subscribe<NewPeerServerChosenEvent> {
-            try {
-                peerServerAddress = InetSocketAddress(it.host, it.port)
-            } catch (e: Exception) {
-                alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server addr")
-                return@subscribe
-            }
-            runAsync {
-                chatBackend.stopClient()
-                chatBackend = Chat(userInfo, peerServerAddress)
-                startClientBackend()
-            }
-        }
+//        subscribe<NewPeerServerChosenEvent> {
+//            try {
+//                peerServerAddress = InetSocketAddress(it.host, it.port)
+//                chatBackend.stopClient()
+//                chatBackend = Chat(userInfo, peerServerAddress)
+//                startClientBackend()
+//            } catch (e: Exception) {
+//                fallbackToDefaultPeerServer()
+//                alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server addr")
+//            }
+//        }
 
         /**
          * Listening to client name change event from UI
          */
-        subscribe<ThisClientInfoChangedEvent> {
-            userInfo = it.newInfo
-            chatBackend.changeClientInfo(userInfo)
-        }
+//        subscribe<ThisClientInfoChangedEvent> {
+//            userInfo = it.newInfo
+//            chatBackend.changeClientInfo(userInfo)
+//        }
 
+        startClientBackend()
+    }
+
+    private fun fallbackToDefaultPeerServer() {
+        chatBackend = Chat(userInfo)
         startClientBackend()
     }
 
@@ -68,7 +70,9 @@ class ChatUIController(val mainWindow: MainWindow,
             chatBackend.addChatEventListener(mainWindow)
             chatBackend.startClient()
         } catch (e: Exception) {
-            chatBackend = Chat(userInfo)
+            if (chatBackend.serverPeerAddress != null) {
+                fallbackToDefaultPeerServer()
+            }
             Platform.runLater {
                 alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server")
             }
@@ -106,5 +110,28 @@ class ChatUIController(val mainWindow: MainWindow,
             val a = chatBackend.serverPeerAddress as InetSocketAddress
             return Pair(a.hostString, a.port)
         }
+    }
+
+    /**
+     * Listening to peer-server update events from UI
+     */
+    fun newPeerServerChosen(host: String?, port: Int) {
+        try {
+            peerServerAddress = InetSocketAddress(host, port)
+            chatBackend.stopClient()
+            chatBackend = Chat(userInfo, peerServerAddress)
+            startClientBackend()
+        } catch (e: Exception) {
+            fallbackToDefaultPeerServer()
+            alert(Alert.AlertType.ERROR, "Client error", "Can't start client with specified server addr")
+        }
+    }
+
+    /**
+     * Listening to client name change event from UI
+     */
+    fun newUserName(newInfo: ChatUserInfo) {
+        userInfo = newInfo
+        chatBackend.changeClientInfo(userInfo)
     }
 }

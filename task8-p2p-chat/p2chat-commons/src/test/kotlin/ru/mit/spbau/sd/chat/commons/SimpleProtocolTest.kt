@@ -32,7 +32,7 @@ class SimpleProtocolTest {
         val bytes = "hello".toByteArray()
         var state = createStartWritingState(bytes)
 
-        val actualMsgSize = state.getBuffer().getInt()
+        val actualMsgSize = state.getBuffer().int
         state = state.proceed()
         Assert.assertEquals(bytes.size, actualMsgSize)
         bytes.forEach { byte ->

@@ -1,12 +1,11 @@
 package ru.mit.spbau.sd.chat.client
 
 import org.slf4j.LoggerFactory
-import ru.mit.spbau.sd.chat.client.model.ChatModel
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
+import ru.mit.spbau.sd.chat.client.model.ChatModel
 import ru.mit.spbau.sd.chat.client.msg.ClientLifecycleListener
 import ru.mit.spbau.sd.chat.client.msg.UsersNetEventHandler
 import ru.mit.spbau.sd.chat.client.net.ChatNetworkShield
-import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -32,10 +31,6 @@ class ChatController internal constructor(
 
     fun addChatModelChangeListener(listener: ChatEventsListener<ChatUserIpAddr>) {
         modelListeners.add(listener)
-    }
-
-    fun removeChatModelChangeListener(listener: ChatEventsListener<ChatUserIpAddr>) {
-        modelListeners.remove(listener)
     }
 
     /**

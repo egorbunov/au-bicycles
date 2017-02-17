@@ -1,7 +1,6 @@
 package ru.mit.spbau.sd.chat.gui
 
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
-import tornadofx.FX
 import tornadofx.FXEvent
 
 /**

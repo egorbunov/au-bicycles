@@ -43,10 +43,6 @@ class ChatModel<T>(
         usersMsgBoxes[userId] = createEmptyMsgBox()
     }
 
-    fun getUserInfo(userId: T): ChatUserInfo? {
-        return usersMap[userId]
-    }
-
     /**
      * Remove user from client chat
      */
@@ -117,18 +113,4 @@ class ChatModel<T>(
         }
     }
 
-    /**
-     * Deletes all users and all messages
-     */
-    fun clear() {
-        usersMsgBoxes.clear()
-        usersMap.clear()
-    }
-
-    /**
-     * Returns users without current chat model owner
-     */
-    fun getUsersWithoutThis(): List<Pair<T, ChatUserInfo>> {
-        return getUsers().filter { it != clientId }
-    }
 }

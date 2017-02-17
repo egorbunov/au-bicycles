@@ -1,7 +1,6 @@
 package ru.mit.spbau.sd.chat.commons.net
 
 import org.slf4j.LoggerFactory
-import java.net.InetSocketAddress
 import java.net.SocketAddress
 import java.nio.channels.AsynchronousServerSocketChannel
 import java.nio.channels.AsynchronousSocketChannel

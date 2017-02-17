@@ -8,7 +8,6 @@ import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import ru.spbau.mit.sd.commons.proto.PeerToPeerMsg
 import java.net.InetSocketAddress
-import java.net.SocketAddress
 
 /**
  * Class, which is used to encapsulate chat client

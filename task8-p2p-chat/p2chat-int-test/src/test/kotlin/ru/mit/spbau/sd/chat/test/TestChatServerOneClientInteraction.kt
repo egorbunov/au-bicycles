@@ -119,7 +119,7 @@ class TestChatServerOneClientInteraction {
         val m21 = createChatMessage("hello, c1 =)")
         c2.sendTextMessage(c1.getMyId(), m21)
 
-        Thread.sleep(1000)
+        Thread.sleep(100)
 
         verify(l2).messageReceived(c1.getMyId(), m12)
         verify(l1).messageReceived(c2.getMyId(), m21)
@@ -169,8 +169,8 @@ class TestChatServerOneClientInteraction {
             messages.add(createChatMessage(it.toString()))
         }
 
-        clientList.forEach { it.startClient() }
-        Thread.sleep(500)
+        clientList.forEach(Chat::startClient)
+        Thread.sleep(100)
 
         clientList.forEachIndexed { i, cFrom ->
             clientList.forEachIndexed { j, cTo ->
@@ -180,7 +180,7 @@ class TestChatServerOneClientInteraction {
             }
         }
 
-        Thread.sleep(1000)
+        Thread.sleep(100)
 
         listenersList.forEachIndexed { i, lFrom ->
             listenersList.forEachIndexed { j, lTo ->

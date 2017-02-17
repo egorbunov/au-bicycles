@@ -60,7 +60,7 @@ class AsyncConnectTest {
         connAcceptor.start()
 
         // client
-        val conn = asyncConnect(connAcceptor.getAddress()).get()
+        asyncConnect(connAcceptor.getAddress()).get()
         Thread.sleep(500) // ...
         verify(serverConnListener).connectionEstablished(any())
 

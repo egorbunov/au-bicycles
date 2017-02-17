@@ -9,7 +9,6 @@ import ru.mit.spbau.sd.chat.commons.net.state.WritingIsDone
 import ru.mit.spbau.sd.chat.commons.net.state.WritingState
 import java.nio.channels.AsynchronousSocketChannel
 import java.util.*
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.locks.ReentrantLock
 
 /**

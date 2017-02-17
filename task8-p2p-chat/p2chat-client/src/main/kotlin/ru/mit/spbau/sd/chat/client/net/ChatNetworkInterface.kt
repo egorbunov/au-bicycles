@@ -1,6 +1,5 @@
 package ru.mit.spbau.sd.chat.client.net
 
-import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr

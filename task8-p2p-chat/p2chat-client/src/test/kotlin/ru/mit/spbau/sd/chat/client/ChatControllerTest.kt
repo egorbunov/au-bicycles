@@ -1,12 +1,14 @@
 package ru.mit.spbau.sd.chat.client
 
-import com.nhaarman.mockito_kotlin.*
+import com.nhaarman.mockito_kotlin.any
+import com.nhaarman.mockito_kotlin.doThrow
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.verify
 import org.junit.Test
 import org.mockito.Mockito
 import ru.mit.spbau.sd.chat.client.model.ChatEventsListener
 import ru.mit.spbau.sd.chat.client.model.ChatModel
 import ru.mit.spbau.sd.chat.client.net.ChatNetworkShield
-import ru.mit.spbau.sd.chat.commons.AsyncFuture
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
@@ -107,7 +109,7 @@ open class ChatControllerTest {
 
         // test client stopped
         controller.clientStopped()
-        for ((id, info) in users) {
+        for ((id) in users) {
             verify(usersEventListener).userGoneOffline(id)
         }
     }

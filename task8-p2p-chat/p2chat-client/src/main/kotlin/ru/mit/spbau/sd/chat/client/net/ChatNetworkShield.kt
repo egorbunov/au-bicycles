@@ -3,12 +3,14 @@ package ru.mit.spbau.sd.chat.client.net
 import org.slf4j.LoggerFactory
 import ru.mit.spbau.sd.chat.client.model.ChatModelInterface
 import ru.mit.spbau.sd.chat.client.msg.ClientLifecycleListener
-import ru.mit.spbau.sd.chat.commons.*
+import ru.mit.spbau.sd.chat.commons.p2pIAmGoneOfflineMsg
+import ru.mit.spbau.sd.chat.commons.p2pIAmOnlineMsg
+import ru.mit.spbau.sd.chat.commons.p2pMyInfoChangedMsg
+import ru.mit.spbau.sd.chat.commons.p2pTextMessageMsg
 import ru.spbau.mit.sd.commons.proto.ChatMessage
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import java.util.*
-import java.util.concurrent.CountDownLatch
 
 /**
  * Class, which provides access to network-dependent part of the chat application.

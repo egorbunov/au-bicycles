@@ -2,6 +2,8 @@ package ru.mit.spbau.sd.chat.gui
 
 import javafx.beans.property.SimpleStringProperty
 import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
+import javafx.scene.layout.BorderPane
 import ru.spbau.mit.sd.commons.proto.ChatUserInfo
 import ru.spbau.mit.sd.commons.proto.ChatUserIpAddr
 import tornadofx.*
@@ -12,39 +14,51 @@ import tornadofx.*
  * @param userId id of the user (ip addr)
  * @param userInfo user details
  */
-class ChangeUserInfoDialog(userInfo: ChatUserInfo, userId: ChatUserIpAddr): Fragment() {
-    override val root = Form()
+class ChangeUserInfoDialog(
+        userInfo: ChatUserInfo,
+        userId: ChatUserIpAddr,
+        private val controller: ChatUIController) : View() {
+
+    override val root = BorderPane()
     val userProp = SimpleStringProperty(userInfo.name!!)
 
     init {
         title = "Change client profile"
 
-        with (root) {
-            prefHeight = 200.0
-            prefWidth = 300.0
-            fieldset("Personal Information") {
-                field("Name") {
-                    textfield().bind(userProp)
-                }
-                field("Peer address") {
-                    textfield {
-                        isEditable = false
-                        text = "${userId.ip}:${userId.port}"
+        val btnSave = button("Save") {
+            setOnAction {
+                controller.newUserName(createChatUserInfo(userProp.get()))
+                closeModal()
+            }
+            disableProperty().bind(userProp.isEmpty)
+        }
+
+        with(root) {
+            center {
+                setOnKeyPressed {
+                    if (it.code == KeyCode.ENTER && !btnSave.isDisabled) {
+                        controller.newUserName(createChatUserInfo(userProp.get()))
+                        closeModal()
                     }
                 }
-            }
-            setOnKeyPressed { if (it.code == KeyCode.ENTER) onSubmit() }
-            button("Save") {
-                setOnAction {
-                    onSubmit()
+
+                form {
+                    prefHeight = 200.0
+                    prefWidth = 300.0
+                    fieldset("Personal Information") {
+                        field("Name") {
+                            textfield().bind(userProp)
+                        }
+                        field("Peer address") {
+                            textfield {
+                                isEditable = false
+                                text = "${userId.ip}:${userId.port}"
+                            }
+                        }
+                    }
+                    add(btnSave)
                 }
-                disableProperty().bind(userProp.isNull)
             }
         }
-    }
-
-    private fun onSubmit() {
-        fire(ThisClientInfoChangedEvent(createChatUserInfo(userProp.get())))
-        closeModal()
     }
 }

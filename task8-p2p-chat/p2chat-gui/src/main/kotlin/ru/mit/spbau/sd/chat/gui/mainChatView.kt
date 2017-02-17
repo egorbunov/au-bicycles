@@ -75,6 +75,13 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
         }
 
 
+        val btnSend = button("Send") {
+            prefWidth = 100.0
+            minWidth = 70.0
+            setOnAction { sendMessageBtnPressed() }
+            disableProperty().bind(messageFieldText.isEmpty)
+        }
+
 
         with(root) {
             top {
@@ -82,18 +89,21 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
                     menu("File") {
                         menuitem("Change server") {
                             val p = controller.getServerPeerAddr()
-                            ChooseServerDialog(p.first, p.second).openModal()
+                            val d = ChooseServerDialog(p.first, p.second, controller)
+                            d.openModal()
                         }
                         menuitem("User profile") {
-                            ChangeUserInfoDialog(
+                            val d = ChangeUserInfoDialog(
                                     controller.getMyInfo(),
-                                    controller.getMyId()).openModal()
+                                    controller.getMyId(),
+                                    controller)
+                            d.openModal()
                         }
                     }
                 }
             }
             center {
-                setOnKeyPressed { if (it.code == KeyCode.ENTER) sendMessageBtnPressed() }
+                setOnKeyPressed { if (it.code == KeyCode.ENTER && !btnSend.isDisabled) sendMessageBtnPressed() }
                 borderpane {
                     center {
                         listview(messageList) { }
@@ -106,12 +116,7 @@ class MainWindow : View("Chat"), ChatEventsListener<ChatUserIpAddr> {
                                 bind(messageFieldText)
                                 prefWidth = 600.0
                             }
-                            button("Send") {
-                                prefWidth = 100.0
-                                minWidth = 70.0
-                                setOnAction { sendMessageBtnPressed() }
-                                disableProperty().bind(messageFieldText.isNull)
-                            }
+                            add(btnSend)
                         }
                     }
                 }
