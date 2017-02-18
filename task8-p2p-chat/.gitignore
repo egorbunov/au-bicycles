@@ -1,0 +1,9 @@
+.idea/
+target/
+.gradle/
+build/
+out/
+log/
+*.lck
+*.vux
+*.bak*

@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option java_package = "ru.spbau.mit.sd.commons.proto";
+option java_outer_classname = "Protos";
+option java_multiple_files = true;
+
+message ChatUserIpAddr {
+    string ip = 1;
+    int32 port = 2;
+}
+
+message ChatUserInfo {
+    string name = 1;
+}
+
+message User {
+    ChatUserIpAddr id = 1; // that is ip address, which shoul be used to connect to that user
+                           // by other peers
+    ChatUserInfo info = 2;
+}
+
+message UsersList {
+    repeated User users = 1;
+}
+
+message ChatMessage {
+    int64 timestamp = 1;
+    string text = 2;
+}
+
+message PeerToPeerMsg {
+    enum Type {
+        CONNECT = 0;
+        TEXT_MESSAGE = 1;
+        MY_INFO_CHANGED = 2;
+        I_AM_ONLINE = 3;
+        I_AM_GONE_OFFLINE = 4;
+        DISCONNECT = 5;
+        CONNECT_OK = 6; // answer to CONNECT
+        REGISTER = 7;
+        REGISTRATION_OK = 8; // answer to REGISTER
+
+    }
+    Type msgType = 1;
+    ChatMessage message = 2;
+    ChatUserIpAddr userFromId = 3;
+    ChatUserInfo userInfo = 4;
+    UsersList usersList = 5; // sent as answer to I_AM_ONLINE
+}
